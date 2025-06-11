@@ -53,7 +53,7 @@ save_image_or_video(video, "output/test.mp4", fps=16)
 
 | Input image | Output video |
 |-------------|--------------|
-| ![Input Image](assets/video2world/example_input.jpg) | <video width="512" src="https://github.com/user-attachments/assets/0ec44819-05ec-4ed8-8753-96d0c94dd304"></video> |
+| ![Input Image](assets/video2world/example_input.jpg) | <video width="512" src="https://github.com/user-attachments/assets/f3c2eaeb-26d6-4d25-a1c2-71882e7f10cc"></video> |
 
 ---
 
