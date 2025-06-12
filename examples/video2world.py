@@ -141,7 +141,7 @@ def setup_pipeline(args: argparse.Namespace):
         dit_path = "checkpoints/nvidia/Cosmos-Predict2-14B-Video2World/model-720p-16fps.pt"
     else:
         raise ValueError("Invalid model size. Choose either '2B' or '14B'.")
-    if args.dit_path:
+    if hasattr(args, 'dit_path') and args.dit_path:
         dit_path = args.dit_path
 
     text_encoder_path = "checkpoints/google-t5/t5-11b"
@@ -155,7 +155,7 @@ def setup_pipeline(args: argparse.Namespace):
     torch.backends.cuda.matmul.allow_tf32 = True
 
     # Initialize distributed environment for multi-GPU inference
-    if args.num_gpus > 1:
+    if hasattr(args, 'num_gpus') and args.num_gpus > 1:
         log.info(f"Initializing distributed environment with {args.num_gpus} GPUs for context parallelism")
         distributed.init()
         parallel_state.initialize_model_parallel(context_parallel_size=args.num_gpus)
