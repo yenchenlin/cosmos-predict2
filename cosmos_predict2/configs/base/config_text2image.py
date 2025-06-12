@@ -53,6 +53,7 @@ class Text2ImagePipelineConfig:
     rectified_flow_t_scaling_factor: float
     resize_online: bool
     resolution: str
+    sde: LazyDict
     timestamps: SolverTimestampConfig = attrs.field(factory=SolverTimestampConfig)
     sigma_data: float = 1.0
     state_ch: int = 16
@@ -121,6 +122,12 @@ PREDICT2_TEXT2IMAGE_PIPELINE_2B = Text2ImagePipelineConfig(
     rectified_flow_t_scaling_factor=1.0,
     resize_online=True,
     resolution="1024",
+    sde=L(EDMSDE)(
+        p_mean=0.0,
+        p_std=1.0,
+        sigma_max=80,
+        sigma_min=0.0002,
+    ),
     sigma_data=1.0,
     state_ch=16,
     state_t=24,
@@ -198,6 +205,12 @@ PREDICT2_TEXT2IMAGE_PIPELINE_14B = Text2ImagePipelineConfig(
     rectified_flow_t_scaling_factor=1.0,
     resize_online=True,
     resolution="1024",
+    sde=L(EDMSDE)(
+        p_mean=0.0,
+        p_std=1.0,
+        sigma_max=80,
+        sigma_min=0.0002,
+    ),
     sigma_data=1.0,
     state_ch=16,
     state_t=24,
