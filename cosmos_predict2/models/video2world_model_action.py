@@ -30,6 +30,7 @@ from cosmos_predict2.utils.optim_instantiate import get_base_scheduler
 from cosmos_predict2.models.video2world_model import Predict2Video2WorldModel
 from imaginaire.lazy_config import LazyDict, instantiate
 from imaginaire.utils import log
+from imaginaire.model import ImaginaireModel
 
 
 @attrs.define(slots=False)
@@ -73,7 +74,7 @@ class Predict2Video2WorldModelConfig:
 
 class ActionConditionalPredict2Video2WorldModel(Predict2Video2WorldModel):
     def __init__(self, config: Predict2Video2WorldModelConfig):
-        # super().__init__()
+        super(ImaginaireModel, self).__init__()
         # New code, added for i4 adaption
         learning_rate = config.learning_rate
         use_gradient_checkpointing = config.use_gradient_checkpointing

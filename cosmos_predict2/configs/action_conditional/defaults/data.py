@@ -22,7 +22,8 @@ from torch.utils.data import DataLoader, DistributedSampler
 from cosmos_predict2.data.action_conditional.action_conditional_dataset import ActionConditionalDataset
 from imaginaire.lazy_config import LazyCall as L
 
-base_path = "./datasets/bridge/"
+# base_path = "./datasets/bridge/"
+base_path = "./datasets/bridge/opensource_robotdata/bridge"
 train_annotation_path = os.path.join(base_path, "annotation/train")
 val_annotation_path = os.path.join(base_path, "annotation/val")
 test_annotation_path = os.path.join(base_path, "annotation/test")

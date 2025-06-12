@@ -151,9 +151,10 @@ class ActionConditionalVideo2WorldPipeline(Video2WorldPipeline):
             log.info(f"Loading DiT from {dit_path}")
         else:
             log.warning("dit_path not provided, initializing DiT with random weights")
-        with init_weights_on_device():
-            dit_config = config.net
-            pipe.dit = instantiate(dit_config).eval()  # inference
+        # with init_weights_on_device():
+        # NOTE: we don't load checkpoint on meta device
+        dit_config = config.net
+        pipe.dit = instantiate(dit_config).eval()  # inference
 
         if dit_path:
             state_dict = load_state_dict(dit_path)

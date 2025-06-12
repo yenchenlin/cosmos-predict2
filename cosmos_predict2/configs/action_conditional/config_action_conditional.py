@@ -27,6 +27,14 @@ from imaginaire.lazy_config import LazyDict
 from cosmos_predict2.configs.base.config_video2world import ConditioningStrategy, CosmosReason1Config, CosmosGuardrailConfig, SolverTimestampConfig
 
 
+'''
+docker run --gpus all -it --rm \
+-v ~/cosmos-predict2:/workspace \
+-v /media/ssd0/weichengt/wm_diffusion_misc/dataset:/workspace/datasets \
+-v /media/ssd0/weichengt/cosmos-predict2-ckpt:/workspace/checkpoints \
+nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0
+'''
+
 
 
 @make_freezable
