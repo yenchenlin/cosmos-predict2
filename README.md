@@ -53,7 +53,7 @@ save_image_or_video(video, "output/test.mp4", fps=16)
 
 | Input image | Output video |
 |-------------|--------------|
-| ![Input Image](assets/video2world/example_input.jpg) | <video width="512" src="https://github.com/user-attachments/assets/f3c2eaeb-26d6-4d25-a1c2-71882e7f10cc"></video> |
+| ![Input Image](assets/video2world/example_input.jpg) | <video width="512" src="https://github-production-user-asset-6210df.s3.amazonaws.com/8789158/454153937-f015a579-1a8c-4c7f-8683-de2913e1c2f4.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250611%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250611T235940Z&X-Amz-Expires=300&X-Amz-Signature=97df8ab45e8de22d94d10b01eb6591fcdc234bf3faed4f3fe50f50d92722af21&X-Amz-SignedHeaders=host"></video> |
 
 ---
 
