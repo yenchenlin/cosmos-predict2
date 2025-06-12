@@ -15,18 +15,16 @@
 
 import attrs
 
-from cosmos_predict2.configs.action_conditional.defaults.conditioner import ActionConditionalConditioner
+from cosmos_predict2.conditioner import BooleanFlag, ReMapkey, TextAttr
 from cosmos_predict2.configs.base.defaults.ema import EMAConfig
-# from cosmos_predict2.configs.base.config_video2world import CosmosReason1Config
-from cosmos_predict2.configs.base.sde import EDMSDE
+from cosmos_predict2.configs.action_conditional.defaults.conditioner import ActionConditionalConditioner
 from cosmos_predict2.models.text2image_dit import SACConfig
 from cosmos_predict2.models.video2world_dit_action import ActionConditionalMinimalV1LVGDiT
+from cosmos_predict2.tokenizers.tokenizer import TokenizerInterface
 from imaginaire.config import make_freezable
 from imaginaire.lazy_config import LazyCall as L
 from imaginaire.lazy_config import LazyDict
-from cosmos_predict2.conditioner import BooleanFlag, ReMapkey, TextAttr
-from cosmos_predict2.configs.base.config_video2world import ConditioningStrategy
-from cosmos_predict2.tokenizers.wan2pt1 import Wan2pt1VAEInterface
+from cosmos_predict2.configs.base.config_video2world import ConditioningStrategy, CosmosReason1Config, CosmosGuardrailConfig
 
 
 
@@ -128,26 +126,25 @@ ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B = ActionConditionalVideo2Wor
     rectified_flow_t_scaling_factor=1.0,
     resize_online=True,
     resolution="720",
-    sde=L(EDMSDE)(
-        p_mean=0.0,
-        p_std=1.0,
-        sigma_max=80,
-        sigma_min=0.0002,
-    ),
     ema=L(EMAConfig)(enabled=False),  # defaults to inference
     sigma_conditional=0.0001,
     sigma_data=1.0,
     state_ch=16,
-    state_t=2,
+    state_t=4,
     text_encoder_class="T5",
-    tokenizer=L(Wan2pt1VAEInterface)(
+    tokenizer=L(TokenizerInterface)(
         chunk_duration=81,
         load_mean_std=False,
-        name="wan2pt1_tokenizer",
-        vae_pth="checkpoints/Wan-AI/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth",
+        name="tokenizer",
+        vae_pth="checkpoints/nvidia/Cosmos-Predict2-2B-Video2World/tokenizer/tokenizer.pth",
     ),
     prompt_refiner_config=CosmosReason1Config(
         checkpoint_dir="checkpoints/nvidia/Cosmos-Reason1-7B",
+        offload_model_to_cpu=True,
+        enabled=True,
+    ),
+    guardrail_config=CosmosGuardrailConfig(
+        checkpoint_dir="checkpoints/",
         offload_model_to_cpu=True,
         enabled=True,
     ),
@@ -224,26 +221,25 @@ ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_14B = ActionConditionalVideo2Wo
     rectified_flow_t_scaling_factor=1.0,
     resize_online=True,
     resolution="720",
-    sde=L(EDMSDE)(
-        p_mean=0.0,
-        p_std=1.0,
-        sigma_max=80,
-        sigma_min=0.0002,
-    ),
     ema=L(EMAConfig)(enabled=False),  # defaults to inference
     sigma_conditional=0.0001,
     sigma_data=1.0,
     state_ch=16,
     state_t=2,
     text_encoder_class="T5",
-    tokenizer=L(Wan2pt1VAEInterface)(
+    tokenizer=L(TokenizerInterface)(
         chunk_duration=81,
         load_mean_std=False,
-        name="wan2pt1_tokenizer",
-        vae_pth="checkpoints/Wan-AI/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth",
+        name="tokenizer",
+        vae_pth="checkpoints/nvidia/Cosmos-Predict2-14B-Video2World/tokenizer/tokenizer.pth",
     ),
     prompt_refiner_config=CosmosReason1Config(
         checkpoint_dir="checkpoints/nvidia/Cosmos-Reason1-7B",
+        offload_model_to_cpu=True,
+        enabled=True,
+    ),
+    guardrail_config=CosmosGuardrailConfig(
+        checkpoint_dir="checkpoints/",
         offload_model_to_cpu=True,
         enabled=True,
     ),
