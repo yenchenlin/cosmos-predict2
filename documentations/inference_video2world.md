@@ -56,7 +56,21 @@ python -m examples.video2world \
     --save_path output/video2world_2b.mp4
 ```
 
-The 14B model can be run similarly by changing the model size parameter.
+The 14B model can be run similarly by changing the model size parameter. For GPUs with lower memory limit, it may also make sense to offload guardrail and prompt refiner models.
+
+```bash
+# Set the input prompt
+PROMPT="A nighttime city bus terminal gradually shifts from stillness to subtle movement. At first, multiple double-decker buses are parked under the glow of overhead lights, with a central bus labeled '87D' facing forward and stationary. As the video progresses, the bus in the middle moves ahead slowly, its headlights brightening the surrounding area and casting reflections onto adjacent vehicles. The motion creates space in the lineup, signaling activity within the otherwise quiet station. It then comes to a smooth stop, resuming its position in line. Overhead signage in Chinese characters remains illuminated, enhancing the vibrant, urban night scene."
+# Run video2world generation
+python -m examples.video2world \
+    --model_size 14B \
+    --input_path assets/video2world/input0.jpg \
+    --num_conditional_frames 1 \
+    --prompt "${PROMPT}" \
+    --save_path output/video2world_14b.mp4 \
+    --offload_guardrail \
+    --offload_prompt_refiner
+```
 
 ### Batch Video Generation
 
@@ -267,6 +281,9 @@ Content safety and controls:
 - `--disable_guardrail`: Disable guardrail checks on prompts (by default, guardrails are enabled to filter harmful content)
 - `--disable_prompt_refiner`: Disable prompt refiner that enhances short prompts (by default, the prompt refiner is enabled)
 
+GPU memory controls:
+- `--offload_guardrail`: Offload guardrail to CPU to save GPU memory
+- `--offload_prompt_refiner`: Offload prompt refiner to CPU to save GPU memory
 ## Specialized Scripts
 
 In addition to the main `video2world.py` script, there are specialized variants for specific use cases:
