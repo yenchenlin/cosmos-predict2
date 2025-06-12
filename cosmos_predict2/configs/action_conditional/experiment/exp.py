@@ -18,7 +18,7 @@ from hydra.core.config_store import ConfigStore
 cs = ConfigStore.instance()
 
 """
-torchrun --nproc_per_node=2 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/action_conditional/config.py -- experiment="action_conditional_predict2_video2world_2b_training"
+torchrun --nproc_per_node=2 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/base/config.py -- experiment="action_conditional_predict2_video2world_2b_training"
 """
 action_conditional_predict2_video2world_2b_training = dict(
     defaults=[
@@ -50,7 +50,7 @@ action_conditional_predict2_video2world_2b_training = dict(
 
 
 """
-torchrun --nproc_per_node=2 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/action_conditional/config.py -- experiment="action_conditional_predict2_video2world_14b_training" ~dataloader_train.dataloaders
+torchrun --nproc_per_node=2 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/base/config.py -- experiment="action_conditional_predict2_video2world_14b_training" ~dataloader_train.dataloaders
 """
 action_conditional_predict2_video2world_14b_training = dict(
     defaults=[

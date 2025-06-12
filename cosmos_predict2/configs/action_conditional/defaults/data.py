@@ -82,7 +82,7 @@ bridge_val_dataloader = L(DataLoader)(
 )
 
 
-def register_training_and_val_data():
+def register_training_and_val_data_action_conditional():
     cs = ConfigStore.instance()
 
     # for local dataset
