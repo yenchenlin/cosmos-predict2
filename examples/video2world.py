@@ -155,7 +155,7 @@ def setup_pipeline(args: argparse.Namespace):
     torch.backends.cuda.matmul.allow_tf32 = True
 
     # Initialize distributed environment for multi-GPU inference
-    if args.num_gpus > 1:
+    if hasattr(args, 'num_gpus') and args.num_gpus > 1:
         log.info(f"Initializing distributed environment with {args.num_gpus} GPUs for context parallelism")
         distributed.init()
         parallel_state.initialize_model_parallel(context_parallel_size=args.num_gpus)
