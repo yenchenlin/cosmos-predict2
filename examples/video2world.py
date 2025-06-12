@@ -141,7 +141,7 @@ def setup_pipeline(args: argparse.Namespace):
         dit_path = "checkpoints/nvidia/Cosmos-Predict2-14B-Video2World/model-720p-16fps.pt"
     else:
         raise ValueError("Invalid model size. Choose either '2B' or '14B'.")
-    if args.dit_path:
+    if hasattr(args, 'dit_path') and args.dit_path:
         dit_path = args.dit_path
 
     text_encoder_path = "checkpoints/google-t5/t5-11b"
