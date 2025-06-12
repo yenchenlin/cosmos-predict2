@@ -77,19 +77,23 @@ class VideoContentSafetyFilter(ContentSafetyGuardrail):
     @torch.inference_mode()
     def __infer(self, pil_image: Image.Image) -> int:
         """Infer the class of the image."""
-        if self.offload_model:
-            self.encoder = self.encoder.to("cuda")
-            self.model = self.model.to("cuda")
-            log.debug("Move video content safety filter to GPU")
         image_embs = self.encoder.encode_image(pil_image)
         logits = self.model.network(image_embs)
         probabilities = torch.nn.functional.softmax(logits, dim=-1)
         predicted_class = torch.argmax(probabilities, dim=-1).item()
+        return predicted_class
+
+    def _to_cuda_if_offload(self):
+        if self.offload_model:
+            self.encoder = self.encoder.to("cuda")
+            self.model = self.model.to("cuda")
+            log.debug("Move video content safety filter to GPU")
+
+    def _to_cpu_if_offload(self):
         if self.offload_model:
             self.encoder = self.encoder.to("cpu")
             self.model = self.model.to("cpu")
             log.debug("Offload video content safety filter to CPU")
-        return predicted_class
 
     def is_safe_file(self, filepath: str) -> bool:
         """Check if the video file is safe."""
@@ -103,6 +107,7 @@ class VideoContentSafetyFilter(ContentSafetyGuardrail):
         is_safe = True
         frame_scores = []
 
+        self._to_cuda_if_offload()
         for frame_number in frame_numbers:
             try:
                 frame = video_data.frames[frame_number]
@@ -128,7 +133,7 @@ class VideoContentSafetyFilter(ContentSafetyGuardrail):
             "fps": video_data.fps,
             "frame_scores": frame_scores,
         }
-
+        self._to_cpu_if_offload()
         log.info(f"Video {filepath} is {'SAFE' if is_safe else 'UNSAFE'}.")
         log.debug(f"Video data: {json.dumps(video_data, indent=4)}")
         return is_safe
@@ -138,6 +143,7 @@ class VideoContentSafetyFilter(ContentSafetyGuardrail):
         is_safe = True
         frame_scores = []
 
+        self._to_cuda_if_offload()
         for frame_number, frame in enumerate(frames):
             try:
                 pil_image = Image.fromarray(frame)
@@ -158,7 +164,7 @@ class VideoContentSafetyFilter(ContentSafetyGuardrail):
             "is_safe": is_safe,
             "frame_scores": frame_scores,
         }
-
+        self._to_cpu_if_offload()
         log.debug(f"Frames data: {json.dumps(video_data, indent=4)}")
         return is_safe
 
