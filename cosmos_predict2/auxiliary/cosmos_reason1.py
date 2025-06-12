@@ -81,7 +81,6 @@ class AllowedTokensLogitsProcessor(LogitsProcessor):
     def __init__(self, allowed_token_ids: list[int]):
         self.allowed_mask = torch.zeros(max(allowed_token_ids)+1, dtype=torch.bool)
         self.allowed_mask[allowed_token_ids] = True
-        # Pre-compute indices for even faster access
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
         if scores.shape[-1] > self.allowed_mask.shape[0]:
@@ -119,7 +118,7 @@ class CosmosReason1(torch.nn.Module):
             checkpoint_dir,
             torch_dtype=torch.bfloat16,
             attn_implementation="flash_attention_2",
-            device_map="auto",
+            device_map="cpu",
             use_cache=True,
         )
         self.offload_model = offload_model_to_cpu
