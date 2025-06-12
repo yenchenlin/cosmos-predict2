@@ -79,13 +79,25 @@ USER_PROMPT_CRITIC = "Does the video contain any anomalies or artifacts?"
 
 class AllowedTokensLogitsProcessor(LogitsProcessor):
     def __init__(self, allowed_token_ids: list[int]):
-        self.allowed_token_ids = set(allowed_token_ids)
+        self.allowed_mask = torch.zeros(max(allowed_token_ids)+1, dtype=torch.bool)
+        self.allowed_mask[allowed_token_ids] = True
+        # Pre-compute indices for even faster access
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
-        mask = torch.full_like(scores, float("-inf"))
-        for idx in self.allowed_token_ids:
-            mask[:, idx] = scores[:, idx]
-        return mask
+        if scores.shape[-1] > self.allowed_mask.shape[0]:
+            self.allowed_mask = torch.nn.functional.pad(self.allowed_mask, (0, scores.shape[-1] - self.allowed_mask.shape[0]), value=False)
+
+        # Vectorized operation: set all disallowed tokens to -inf at once
+        device = scores.device
+
+        # Move mask to the same device as scores if needed
+        if self.allowed_mask.device != device:
+            self.allowed_mask = self.allowed_mask.to(device)
+
+        # Create mask for disallowed tokens and apply it vectorized
+        disallowed_mask = ~self.allowed_mask[:scores.shape[-1]]
+        scores[:, disallowed_mask] = float("-inf")
+        return scores
 
 
 class CosmosReason1(torch.nn.Module):
@@ -107,16 +119,44 @@ class CosmosReason1(torch.nn.Module):
             checkpoint_dir,
             torch_dtype=torch.bfloat16,
             attn_implementation="flash_attention_2",
-            device_map="cpu",
+            device_map="auto",
             use_cache=True,
         )
         self.offload_model = offload_model_to_cpu
         self.enabled = enabled
-
+        self._compute_allowed_token_ids()
         # move model to GPU if not offload_model_to_cpu and enabled
         if not offload_model_to_cpu and self.enabled:
             self.model = self.model.to("cuda")
             log.debug("Move Reason1 model to GPU")
+
+    def _compute_allowed_token_ids(self):
+        """Pre-compute allowed token IDs for ASCII characters to avoid repeated computation."""
+        log.debug("Pre-computing allowed token IDs for ASCII characters...")
+        # Get all token IDs
+        all_token_ids = list(range(self.processor.tokenizer.vocab_size))
+        # Batch decode all tokens at once (much faster than individual decodes)
+        try:
+            # Try batch decoding first (fastest)
+            decoded_tokens = self.processor.tokenizer.batch_decode(
+                [[i] for i in all_token_ids], skip_special_tokens=False
+            )
+            # Filter for ASCII-only tokens
+            self.allowed_token_ids = [
+                token_id for token_id, decoded in zip(all_token_ids, decoded_tokens)
+                if all(ord(c) < 128 for c in decoded)
+            ]
+        except Exception:
+            # Fallback to individual decoding if batch decode fails
+            log.warning("Batch decode failed, falling back to individual token decoding...")
+            self.allowed_token_ids = [
+                i for i in all_token_ids
+                if all(ord(c) < 128 for c in self.processor.tokenizer.decode([i]))
+            ]
+        # Add special tokens
+        self.allowed_token_ids.extend(self.processor.tokenizer.all_special_ids)
+        self.allowed_token_ids = list(set(self.allowed_token_ids))  # Remove duplicates
+        log.debug(f"Computed {len(self.allowed_token_ids)} allowed token IDs")
 
     def prepare_dialog(self, image_or_video_path: str, prompt: str) -> list[dict]:
         log.debug(f"Preparing dialog for {image_or_video_path} with prompt {prompt}")
@@ -157,14 +197,7 @@ class CosmosReason1(torch.nn.Module):
         )
         # Inference: Generation of the output
         inputs = inputs.to("cuda")
-        # mask out non-English characters
-        allowed_token_ids = [
-            i
-            for i in range(self.processor.tokenizer.vocab_size)
-            if all(ord(c) < 128 for c in self.processor.tokenizer.decode([i]))
-        ]
-        allowed_token_ids.extend(self.processor.tokenizer.all_special_ids)
-        logits_processor = LogitsProcessorList([AllowedTokensLogitsProcessor(allowed_token_ids)])
+        logits_processor = LogitsProcessorList([AllowedTokensLogitsProcessor(self.allowed_token_ids)])
         generated_ids = self.model.generate(**inputs, max_new_tokens=512, logits_processor=logits_processor)
         generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
         output_text = self.processor.batch_decode(
