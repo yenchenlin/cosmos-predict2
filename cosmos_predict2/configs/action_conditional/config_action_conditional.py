@@ -24,7 +24,7 @@ from cosmos_predict2.tokenizers.tokenizer import TokenizerInterface
 from imaginaire.config import make_freezable
 from imaginaire.lazy_config import LazyCall as L
 from imaginaire.lazy_config import LazyDict
-from cosmos_predict2.configs.base.config_video2world import ConditioningStrategy, CosmosReason1Config, CosmosGuardrailConfig
+from cosmos_predict2.configs.base.config_video2world import ConditioningStrategy, CosmosReason1Config, CosmosGuardrailConfig, SolverTimestampConfig
 
 
 
@@ -41,11 +41,11 @@ class ActionConditionalVideo2WorldPipelineConfig:
     net: LazyDict
     tokenizer: LazyDict
     prompt_refiner_config: CosmosReason1Config
+    guardrail_config: CosmosGuardrailConfig
     precision: str
     rectified_flow_t_scaling_factor: float
     resize_online: bool
     resolution: str
-    sde: LazyDict
     ema: EMAConfig
     sigma_data: float = 1.0
     state_ch: int = 16
@@ -53,6 +53,7 @@ class ActionConditionalVideo2WorldPipelineConfig:
     text_encoder_class: str = "T5"
     input_data_key: str = "video"
     input_image_key: str = "images"
+    timestamps: SolverTimestampConfig = attrs.field(factory=SolverTimestampConfig)
 
 
 # Cosmos Predict2 Video2World 2B
@@ -225,7 +226,7 @@ ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_14B = ActionConditionalVideo2Wo
     sigma_conditional=0.0001,
     sigma_data=1.0,
     state_ch=16,
-    state_t=2,
+    state_t=4,
     text_encoder_class="T5",
     tokenizer=L(TokenizerInterface)(
         chunk_duration=81,
