@@ -32,6 +32,8 @@ It requires input arguments:
 - `--input_path`: input image or video
 - `--prompt`: text prompt
 
+By default the checkpoint you downloaded from the [Downloading Checkpoints](setup.md#downloading-checkpoints) section in the Setup guide are for 720P and 16FPS. If you instead want to change the behavior to, say, 480P and 10FPS, you need to download the corresponding checkpoint and pass `--fps 10 --resolution 480`.
+
 For a complete list of available arguments and options:
 ```bash
 python -m examples.video2world --help
@@ -249,11 +251,15 @@ python -m examples.video2world_bestofn \
 
 ## API Documentation
 
-The `predict2_video2world.py` script supports the following command-line arguments:
+The `video2world.py` script supports the following command-line arguments:
 
 Model selection:
 - `--model_size`: Size of the model to use (choices: "2B", "14B", default: "2B")
 - `--dit_path`: Custom path to the DiT model checkpoint for post-trained models (default: uses standard checkpoint path based on model_size)
+- `--fps`: FPS of the model to use for video-to-world generation (choices: 10, 16, default: 16)
+- `--resolution`: Resolution of the model to use for video-to-world generation (choices: 480, 720, default: 720)
+
+By default a 720P + 16FPS model is used for `model_size` size model. If you want to use another config, download the corresponding checkpoin tand pass either `--fps` or `--resolution` or both.
 
 Input parameters:
 - `--prompt`: Text prompt describing the video to generate (default: empty string)
