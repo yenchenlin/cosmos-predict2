@@ -33,7 +33,7 @@ action_conditional_predict2_video2world_2b_training = dict(
         config=dict(
             num_video_frames=13,
             resolution="720",
-            fsdp_shard_size=8,
+            fsdp_shard_size=-1,
         )
     ),
     job=dict(group="debug", name="action_conditional_predict2_video2world_2b_training_${now:%Y-%m-%d}_${now:%H-%M-%S}"),

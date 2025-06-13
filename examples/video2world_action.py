@@ -108,7 +108,7 @@ def setup_pipeline(args: argparse.Namespace):
     log.info(f"Using model size: {args.model_size}")
     if args.model_size == "2B":
         config = ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B
-        dit_path = "checkpoints/model_action_seq_2B.pth"
+        dit_path = "checkpoints/nvidia/Cosmos-Predict2-2B-Sample-Action-Conditioned/model-480p-4fps.pth"
     else:
         raise ValueError("Invalid model size. Choose either '2B' or '14B'.")
     if hasattr(args, 'dit_path') and args.dit_path:

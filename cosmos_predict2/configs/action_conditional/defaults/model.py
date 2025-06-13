@@ -34,7 +34,7 @@ ACTION_CONDITIONAL_PREDICT2_V2W_2B_FSDP_CONFIG = dict(
                 dit_path="checkpoints/nvidia/Cosmos-Predict2-2B-Video2World/model-720p-16fps.pt",
                 text_encoder_path="",  # Do not load text encoder for training.
             ),
-            fsdp_shard_size=8,
+            fsdp_shard_size=-1,
         ),
         _recursive_=False,
     ),
