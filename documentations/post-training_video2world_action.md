@@ -64,14 +64,13 @@ action_conditional_predict2_video2world_2b_training = dict(
 
 
 ## 3. Inference for Bridge
-
-We release a 2B model post-trained with Bridge dataset
-2B model
-`s3://checkpoints-us-east-1/cosmos_diffusion_v2/action_conditional/action_sequence_conditional-2B-Res-480-640-Fps-16-Note-06_04/checkpoints/iter_000032000`
-
+##### Cosmos-Predict2-2B-Video2World
+For example, if a posttrained checkpoint with 1000 iterations is to be used, run the following command.
+Use `--dit_path` argument to specify the path to the post-trained checkpoint.
 ```
-python -m examples.video2world_action \
+CUDA_HOME=$CONDA_PREFIX PYTHONPATH=$(pwd) python examples/video2world_action.py \
   --model_size 2B \
+  --dit_path "checkpoints/posttraining/video2world/action_conditional_predict2_video2world_2b_training_${now:%Y-%m-%d}_${now:%H-%M-%S}/checkpoints/model/iter_000001000.pt" \
   --input_video datasets/bridge/opensource_robotdata/bridge/videos/test/13/rgb.mp4 \
   --input_annotation datasets/bridge/opensource_robotdata/bridge/annotation/test/13.json \
   --num_conditional_frames 1 \

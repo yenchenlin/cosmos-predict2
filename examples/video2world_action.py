@@ -44,6 +44,18 @@ python -m examples.video2world_action \
   --seed 0 \
   --disable_guardrail \
   --disable_prompt_refiner 
+
+python -m examples.video2world_action \
+  --model_size 2B \
+  --input_video datasets/bridge/videos/test/2558/rgb.mp4 \
+  --input_annotation datasets/bridge/annotation/test/2558.json \
+  --num_conditional_frames 1 \
+  --save_path output/generated_video.mp4 \
+  --guidance 0 \
+  --seed 0 \
+  --disable_guardrail \
+  --disable_prompt_refiner \
+  --autoregressive
 '''
 
 
@@ -92,9 +104,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--chunk_size",
         type=int,
-        default=13,
+        default=12,
         help="Chunk size",
     )
+    parser.add_argument('--autoregressive', action='store_true', help='Use autoregressive mode')
     parser.add_argument("--guidance", type=float, default=7, help="Guidance value")
     parser.add_argument("--seed", type=int, default=0, help="Random seed for reproducibility")
     parser.add_argument(
@@ -126,7 +139,8 @@ def setup_pipeline(args: argparse.Namespace):
     if hasattr(args, 'dit_path') and args.dit_path:
         dit_path = args.dit_path
 
-    text_encoder_path = "checkpoints/google-t5/t5-11b"
+    # text_encoder_path = "checkpoints/google-t5/t5-11b"
+    text_encoder_path = ""
 
     misc.set_random_seed(seed=args.seed, by_rank=True)
     # Initialize cuDNN.
@@ -172,7 +186,7 @@ def read_first_frame(video_path):
 
 
 def process_single_generation(
-    pipe, input_path, input_annotation, output_path, guidance, seed, chunk_size
+    pipe, input_path, input_annotation, output_path, guidance, seed, chunk_size, autoregressive
 ):
 
     actions = get_action_sequence(input_annotation)
@@ -180,13 +194,31 @@ def process_single_generation(
 
     log.info(f"Running Video2WorldPipeline\ninput: {input_path}")
 
-    video = pipe(
-        first_frame,
-        actions[:chunk_size-1],
-        num_conditional_frames=1,
-        guidance=guidance,
-        seed=seed,
-    )
+    if autoregressive:
+        log.info("Using autoregressive mode")
+        video_chunks = []
+        for i in range(0, len(actions), chunk_size):
+            if actions[i:i+chunk_size].shape[0] < chunk_size:
+                log.info(f"Reached end of actions")
+                break
+            video = pipe(
+                first_frame,
+                actions[i:i+chunk_size],
+                num_conditional_frames=1,
+                guidance=guidance,
+                seed=seed + i,
+            )
+            first_frame = ((video[0, :, -1].permute(1, 2, 0).cpu().numpy() / 2 + 0.5).clip(0, 1)*255).astype(np.uint8)
+            video_chunks.append(video)
+        video = torch.cat([video_chunks[0]]+[chunk[:,:,:-1] for chunk in video_chunks[1:]], dim=2)
+    else:
+        video = pipe(
+            first_frame,
+            actions[:chunk_size],
+            num_conditional_frames=1,
+            guidance=guidance,
+            seed=seed,
+        )
 
     if video is not None:
         # save the generated video
@@ -210,6 +242,7 @@ def generate_video(args: argparse.Namespace, pipe: ActionConditionalVideo2WorldP
         guidance=args.guidance,
         seed=args.seed,
         chunk_size=args.chunk_size,
+        autoregressive=args.autoregressive,
     )
     return
 
