@@ -33,31 +33,6 @@ from cosmos_predict2.pipelines.video2world_action import ActionConditionalVideo2
 from imaginaire.utils import distributed, log, misc
 from imaginaire.utils.io import save_image_or_video
 
-'''
-python -m examples.video2world_action \
-  --model_size 2B \
-  --input_video datasets/bridge/videos/test/13/rgb.mp4 \
-  --input_annotation datasets/bridge/annotation/test/13.json \
-  --num_conditional_frames 1 \
-  --save_path output/generated_video.mp4 \
-  --guidance 0 \
-  --seed 0 \
-  --disable_guardrail \
-  --disable_prompt_refiner 
-
-python -m examples.video2world_action \
-  --model_size 2B \
-  --input_video datasets/bridge/videos/test/2558/rgb.mp4 \
-  --input_annotation datasets/bridge/annotation/test/2558.json \
-  --num_conditional_frames 1 \
-  --save_path output/generated_video.mp4 \
-  --guidance 0 \
-  --seed 0 \
-  --disable_guardrail \
-  --disable_prompt_refiner \
-  --autoregressive
-'''
-
 
 def get_action_sequence(annotation_path):
     with open(annotation_path, "r") as file:
@@ -206,7 +181,7 @@ def process_single_generation(
                 actions[i:i+chunk_size],
                 num_conditional_frames=1,
                 guidance=guidance,
-                seed=seed + i,
+                seed=i,
             )
             first_frame = ((video[0, :, -1].permute(1, 2, 0).cpu().numpy() / 2 + 0.5).clip(0, 1)*255).astype(np.uint8)
             video_chunks.append(video)
