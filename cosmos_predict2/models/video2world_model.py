@@ -56,8 +56,6 @@ class Predict2Video2WorldModelConfig:
     lora_alpha: int = 16
     lora_target_modules: str = "q_proj,k_proj,v_proj,output_proj,mlp.layer1,mlp.layer2"
     init_lora_weights: bool = True
-    num_video_frames: int = 81
-    resolution: str = "720"
 
     precision: str = "bfloat16"
     input_data_key: str = "video"

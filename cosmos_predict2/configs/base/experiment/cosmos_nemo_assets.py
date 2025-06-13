@@ -65,8 +65,6 @@ predict2_video2world_training_2b_cosmos_nemo_assets = dict(
     ),
     model=dict(
         config=dict(
-            num_video_frames=77,
-            resolution="720",
             fsdp_shard_size=8,
             pipe_config=dict(
                 ema=dict(enabled=True),
@@ -106,8 +104,6 @@ predict2_video2world_training_14b_cosmos_nemo_assets = dict(
     ),
     model=dict(
         config=dict(
-            num_video_frames=77,
-            resolution="720",
             fsdp_shard_size=8,
             pipe_config=dict(
                 ema=dict(enabled=True),

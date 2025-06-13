@@ -98,8 +98,6 @@ predict2_video2world_training_2b_custom_data = dict(
     ),
     model=dict(
         config=dict(
-            num_video_frames=77,            # the number of video frames used for training
-            resolution="720",
             fsdp_shard_size=8,              # FSDP size
             pipe_config=dict(
                 ema=dict(enabled=True),     # enable EMA during training

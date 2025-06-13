@@ -69,8 +69,6 @@ action_conditioned_predict2_video2world_2b_training = dict(
     ],
     model=dict(
         config=dict(
-            num_video_frames=13,
-            resolution="720",
             fsdp_shard_size=-1,
         )
     ),
