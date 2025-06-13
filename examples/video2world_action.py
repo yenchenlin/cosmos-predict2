@@ -17,19 +17,19 @@ import argparse
 import json
 import os
 import numpy as np
+import pdb
+import mediapy as mp
 
 # Set TOKENIZERS_PARALLELISM environment variable to avoid deadlocks with multiprocessing
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import torch
 from megatron.core import parallel_state
-from tqdm import tqdm
 
 from cosmos_predict2.configs.action_conditional.config_action_conditional import (
     ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B,
 )
 from cosmos_predict2.pipelines.video2world_action import ActionConditionalVideo2WorldPipeline
-from cosmos_predict2.pipelines.video2world import _IMAGE_EXTENSIONS, _VIDEO_EXTENSIONS
 from imaginaire.utils import distributed, log, misc
 from imaginaire.utils.io import save_image_or_video
 
@@ -39,43 +39,15 @@ _DEFAULT_NEGATIVE_PROMPT = "The video captures a series of frames showing ugly s
 '''
 python -m examples.video2world_action \
   --model_size 2B \
-  --batch_input_json dream_gen_benchmark/gr1_object/batch_input.json \
-  --input_video datasets/bridge/videos/test/13/rgb.mp4 \
-  --input_annotation datasets/bridge/annotation/test/13.json \
+  --input_video datasets/bridge/opensource_robotdata/bridge/videos/test/13/rgb.mp4 \
+  --input_annotation datasets/bridge/opensource_robotdata/bridge/annotation/test/13.json \
   --num_conditional_frames 1 \
   --save_path output/generated_video.mp4 \
-  --guidance 7 \
-  --seed 0 
+  --guidance 0 \
+  --seed 0 \
+  --disable_guardrail \
+  --disable_prompt_refiner 
 '''
-
-def validate_input_file(input_path: str, num_conditional_frames: int) -> bool:
-    if not os.path.exists(input_path):
-        log.warning(f"Input file does not exist, skipping: {input_path}")
-        return False
-
-    ext = os.path.splitext(input_path)[1].lower()
-
-    if num_conditional_frames == 1:
-        # Single frame conditioning: accept both images and videos
-        if ext not in _IMAGE_EXTENSIONS and ext not in _VIDEO_EXTENSIONS:
-            log.warning(
-                f"Skipping file with unsupported extension for single frame conditioning: {input_path} "
-                f"(expected: {_IMAGE_EXTENSIONS + _VIDEO_EXTENSIONS})"
-            )
-            return False
-    elif num_conditional_frames == 5:
-        # Multi-frame conditioning: only accept videos
-        if ext not in _VIDEO_EXTENSIONS:
-            log.warning(
-                f"Skipping file for multi-frame conditioning (requires video): {input_path} "
-                f"(expected: {_VIDEO_EXTENSIONS}, got: {ext})"
-            )
-            return False
-    else:
-        log.error(f"Invalid num_conditional_frames: {num_conditional_frames} (must be 1 or 5)")
-        return False
-
-    return True
 
 
 def get_action_sequence(annotation_path):
@@ -102,12 +74,6 @@ def parse_args() -> argparse.Namespace:
         help="Custom path to the DiT model checkpoint for post-trained models.",
     )
     parser.add_argument(
-        "--prompt",
-        type=str,
-        default="",
-        help="Text prompt for video generation",
-    )
-    parser.add_argument(
         "--input_video",
         type=str,
         default="assets/video2world/input0.jpg",
@@ -120,12 +86,6 @@ def parse_args() -> argparse.Namespace:
         help="Path to input image or video for conditioning (include file extension)",
     )
     parser.add_argument(
-        "--negative_prompt",
-        type=str,
-        default=_DEFAULT_NEGATIVE_PROMPT,
-        help="Negative text prompt for video-to-world generation",
-    )
-    parser.add_argument(
         "--num_conditional_frames",
         type=int,
         default=1,
@@ -133,10 +93,10 @@ def parse_args() -> argparse.Namespace:
         help="Number of frames to condition on (1 for single frame, 5 for multi-frame conditioning)",
     )
     parser.add_argument(
-        "--batch_input_json",
-        type=str,
-        default=None,
-        help="Path to JSON file containing batch inputs. Each entry should have 'input_video', 'prompt', and 'output_video' fields.",
+        "--chunk_size",
+        type=int,
+        default=13,
+        help="Chunk size",
     )
     parser.add_argument("--guidance", type=float, default=7, help="Guidance value")
     parser.add_argument("--seed", type=int, default=0, help="Random seed for reproducibility")
@@ -209,22 +169,24 @@ def setup_pipeline(args: argparse.Namespace):
 
     return pipe
 
+def read_first_frame(video_path):
+    video = mp.read_video(video_path)  # Returns (T, H, W, C) numpy array
+    return video[0] # Return first frame as numpy array
+
 
 def process_single_generation(
-    pipe, input_path, prompt, output_path, negative_prompt, num_conditional_frames, guidance, seed
+    pipe, input_path, input_annotation, output_path, guidance, seed, chunk_size
 ):
-    # Validate input file
-    # if not validate_input_file(input_path, num_conditional_frames):
-    #     log.warning(f"Input file validation failed: {input_path}")
-    #     return False
 
-    log.info(f"Running Video2WorldPipeline\ninput: {input_path}\nprompt: {prompt}")
+    actions = get_action_sequence(input_annotation)
+    first_frame = read_first_frame(input_path)
+
+    log.info(f"Running Video2WorldPipeline\ninput: {input_path}")
 
     video = pipe(
-        prompt=prompt,
-        negative_prompt=negative_prompt,
-        input_path=input_path,
-        num_conditional_frames=num_conditional_frames,
+        first_frame,
+        actions[:chunk_size-1],
+        num_conditional_frames=1,
         guidance=guidance,
         seed=seed,
     )
@@ -235,67 +197,25 @@ def process_single_generation(
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
         log.info(f"Saving generated video to: {output_path}")
-        save_image_or_video(video, output_path, fps=16)
+        save_image_or_video(video, output_path, fps=4)
         log.success(f"Successfully saved video to: {output_path}")
         return True
     return False
 
 
+
 def generate_video(args: argparse.Namespace, pipe: ActionConditionalVideo2WorldPipeline) -> None:
-    actions = get_action_sequence(args.input_annotation)
     process_single_generation(
         pipe=pipe,
         input_path=args.input_video,
-        prompt=args.prompt,
+        input_annotation=args.input_annotation,
         output_path=args.save_path,
-        negative_prompt=args.negative_prompt,
-        num_conditional_frames=args.num_conditional_frames,
         guidance=args.guidance,
         seed=args.seed,
+        chunk_size=args.chunk_size,
     )
     return
-    
-    
-    
-    # Video-to-World
-    if args.batch_input_json is not None:
-        # Process batch inputs from JSON file
-        log.info(f"Loading batch inputs from JSON file: {args.batch_input_json}")
-        with open(args.batch_input_json, "r") as f:
-            batch_inputs = json.load(f)
 
-        for idx, item in enumerate(tqdm(batch_inputs)):
-            input_video = item.get("input_video", "")
-            prompt = item.get("prompt", "")
-            output_video = item.get("output_video", f"output_{idx}.mp4")
-
-            if not input_video or not prompt:
-                log.warning(f"Skipping item {idx}: Missing input_video or prompt")
-                continue
-
-            process_single_generation(
-                pipe=pipe,
-                input_path=input_video,
-                prompt=prompt,
-                output_path=output_video,
-                negative_prompt=args.negative_prompt,
-                num_conditional_frames=args.num_conditional_frames,
-                guidance=args.guidance,
-                seed=args.seed,
-            )
-    else:
-        process_single_generation(
-            pipe=pipe,
-            input_path=args.input_path,
-            prompt=args.prompt,
-            output_path=args.save_path,
-            negative_prompt=args.negative_prompt,
-            num_conditional_frames=args.num_conditional_frames,
-            guidance=args.guidance,
-            seed=args.seed,
-        )
-
-    return
 
 
 def cleanup_distributed():

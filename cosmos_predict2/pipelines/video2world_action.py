@@ -17,7 +17,7 @@ from typing import Any
 
 import numpy as np
 import torch
-import os
+import pdb
 
 from megatron.core import parallel_state
 
@@ -33,11 +33,17 @@ from cosmos_predict2.module.denoiser_scaling import RectifiedFlowScaling
 from cosmos_predict2.schedulers.rectified_flow_scheduler import (
     RectifiedFlowAB2Scheduler,
 )
+from cosmos_predict2.utils.context_parallel import (
+    cat_outputs_cp,
+    split_inputs_cp,
+)
 from imaginaire.lazy_config import instantiate
-from imaginaire.utils import log
+from imaginaire.utils import log, misc
 from imaginaire.utils.ema import FastEmaModelUpdater
 
 IS_PREPROCESSED_KEY = "is_preprocessed"
+_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", "webp"]
+_VIDEO_EXTENSIONS = [".mp4"]
 NUM_CONDITIONAL_FRAMES_KEY: str = "num_conditional_frames"
 
 
@@ -170,7 +176,7 @@ class ActionConditionalVideo2WorldPipeline(Video2WorldPipeline):
         return pipe
 
     def _get_data_batch_input(
-        self, video: torch.Tensor, prompt: str, negative_prompt: str = "", num_latent_conditional_frames: int = 1
+        self, video: torch.Tensor, actions: np.ndarray, prompt: str, negative_prompt: str = "", num_latent_conditional_frames: int = 1
     ):
         """
         Prepares the input data batch for the diffusion model.
@@ -194,10 +200,12 @@ class ActionConditionalVideo2WorldPipeline(Video2WorldPipeline):
         data_batch = {
             "dataset_name": "video_data",
             "video": video,
-            "t5_text_embeddings": self.encode_prompt(prompt).to(dtype=self.torch_dtype),
+            # "t5_text_embeddings": self.encode_prompt(prompt).to(dtype=self.torch_dtype),
+            "t5_text_embeddings": torch.zeros(self.batch_size, 512, 1024, dtype=torch.bfloat16).cuda(),
             "fps": torch.randint(16, 32, (self.batch_size,)),  # Random FPS (might be used by model)
             "padding_mask": torch.zeros(self.batch_size, 1, H, W),  # Padding mask (assumed no padding here)
             "num_conditional_frames": num_latent_conditional_frames,  # Specify number of conditional frames
+            "action": actions,
         }
 
         # Handle negative prompts for classifier-free guidance
@@ -214,9 +222,10 @@ class ActionConditionalVideo2WorldPipeline(Video2WorldPipeline):
     @torch.no_grad()
     def __call__(
         self,
-        input_path: str,
-        prompt: str,
-        negative_prompt: str = "",
+        first_frame: np.ndarray,
+        actions: np.ndarray,
+        prompt: str= '',
+        negative_prompt: str = '',
         num_conditional_frames: int = 1,
         guidance: float = 7.0,
         num_sampling_step: int = 35,
@@ -224,77 +233,20 @@ class ActionConditionalVideo2WorldPipeline(Video2WorldPipeline):
         solver_option: str = "2ab",
     ) -> torch.Tensor | None:
         # Parameter check
-        height, width = VIDEO_RES_SIZE_INFO[self.config.resolution]["9,16"]  # type: ignore
-        height, width = self.check_resize_height_width(height, width)
+        # height, width = VIDEO_RES_SIZE_INFO[self.config.resolution]["9,16"]  # type: ignore
+        # height, width = self.check_resize_height_width(height, width)
         assert num_conditional_frames in [1, 5], "num_conditional_frames must be 1 or 5"
         num_latent_conditional_frames = self.tokenizer.get_latent_num_frames(num_conditional_frames)
 
-        # Run text guardrail on the prompt
-        if self.text_guardrail_runner is not None:
-            from cosmos_predict2.auxiliary.guardrail.common import (
-                presets as guardrail_presets,
-            )
+        # num_video_frames = self.tokenizer.get_pixel_num_frames(self.config.state_t)
 
-            log.info("Running guardrail check on prompt...")
-            if not guardrail_presets.run_text_guardrail(prompt, self.text_guardrail_runner):
-                return None
-            else:
-                log.success("Passed guardrail on prompt")
-        elif self.text_guardrail_runner is None:
-            log.warning("Guardrail checks on prompt are disabled")
-
-        # refine prompt only if prompt refiner is enabled
-        if (
-            hasattr(self, "prompt_refiner")
-            and self.prompt_refiner is not None
-            and getattr(self.config, "prompt_refiner_config", None)
-            and getattr(self.config.prompt_refiner_config, "enabled", False)
-        ):
-            log.info("Starting prompt refinement...")
-            prompt = self.prompt_refiner.refine_prompt(input_path, prompt)
-            log.info("Finished prompt refinement")
-
-            # Run text guardrail on the refined prompt
-            if self.text_guardrail_runner is not None:
-                log.info("Running guardrail check on refined prompt...")
-                if not guardrail_presets.run_text_guardrail(prompt, self.text_guardrail_runner):
-                    return None
-                else:
-                    log.success("Passed guardrail on refined prompt")
-            elif self.text_guardrail_runner is None:
-                log.warning("Guardrail checks on refined prompt are disabled")
-        elif (
-            hasattr(self, "config")
-            and hasattr(self.config, "prompt_refiner_config")
-            and not self.config.prompt_refiner_config.enabled
-        ):
-            log.warning("Prompt refinement is disabled")
-
-        num_video_frames = self.tokenizer.get_pixel_num_frames(self.config.state_t)
-
-        # Detect file extension to determine appropriate reading function
-        ext = os.path.splitext(input_path)[1].lower()
-        if ext in _VIDEO_EXTENSIONS:
-            # Always use video reading for video files, regardless of num_latent_conditional_frames
-            vid_input = read_and_process_video(
-                input_path, [height, width], num_video_frames, num_latent_conditional_frames, resize=True
-            )
-        elif ext in _IMAGE_EXTENSIONS:
-            if num_latent_conditional_frames == 1:
-                # Use image reading for single frame conditioning with image files
-                vid_input = read_and_process_image(input_path, [height, width], num_video_frames, resize=True)
-            else:
-                raise ValueError(
-                    f"Cannot use multi-frame conditioning (num_conditional_frames={num_conditional_frames}) with image input. Please provide a video file."
-                )
-        else:
-            raise ValueError(
-                f"Unsupported file extension: {ext}. Supported extensions are {_IMAGE_EXTENSIONS + _VIDEO_EXTENSIONS}"
-            )
+        # transform first frame and actions to tensor
+        vid_input = torch.from_numpy(first_frame).permute(2, 0, 1)[None,:, None,...]
+        actions_tensor = torch.from_numpy(actions).to(dtype=torch.bfloat16)[None,...]
 
         # Prepare the data batch with text embeddings
         data_batch = self._get_data_batch_input(
-            vid_input, prompt, negative_prompt, num_latent_conditional_frames=num_latent_conditional_frames
+            vid_input, actions_tensor, prompt, negative_prompt, num_latent_conditional_frames=num_latent_conditional_frames
         )
 
         # preprocess

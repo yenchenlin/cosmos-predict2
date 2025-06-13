@@ -32,7 +32,7 @@ Run the following command to execute an example post-training job with Bridge da
 torchrun --nproc_per_node=2 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/base/config.py -- experiment="action_conditional_predict2_video2world_2b_training"
 ```
 
-The model will be post-trained using the GR1 dataset. See the config predict2_video2world_training_2b_groot_gr1_480 defined in cosmos_predict2/configs/base/experiment/groot.py to understand how the dataloader is defined.
+The model will be post-trained using the Bridge dataset. See the config predict2_video2world_training_2b_groot_gr1_480 defined in cosmos_predict2/configs/base/experiment/groot.py to understand how the dataloader is defined.
 
 
 The checkpoints will be saved to checkpoints/PROJECT/GROUP/NAME. In the above example, PROJECT is posttraining, GROUP is video2world, NAME is 2b_groot_gr1_480.
@@ -53,9 +53,8 @@ predict2_video2world_training_2b_groot_gr1_480 = dict(
 ```
 
 
-## 3. Inference for DreamGen Benchmark
+## 3. Inference for Bridge
 
-### 1.3 Inference
 2B model
-`s3://checkpoints-us-east-1/cosmos_diffusion_v2/action_conditional/i_frame_action_conditional-Cosmos-Predict2-2B-Res-720-Fps-16-debug-lr-2e-5-cf-1/checkpoints/iter_000060000`
+`s3://checkpoints-us-east-1/cosmos_diffusion_v2/action_conditional/action_sequence_conditional-2B-Res-480-640-Fps-16-Note-06_04/checkpoints/iter_000032000`
 
