@@ -88,14 +88,22 @@ Please make sure you have access to Docker on your machine and the [NVIDIA Conta
 2. Login: `huggingface-cli login`
 3. The [Llama-Guard-3-8B terms](https://huggingface.co/meta-llama/Llama-Guard-3-8B) must be accepted. Approval will be required before Llama Guard 3 can be downloaded.
 4. Download models:
-   ```bash
-   # Download Text2Image models (2B and 14B)
-   python -m scripts.download_checkpoints --model_sizes 2B 14B --model_types text2image --checkpoint_dir checkpoints
 
-   # Download Video2World models (2B and 14B)
-   python -m scripts.download_checkpoints --model_sizes 2B 14B --model_types video2world --checkpoint_dir checkpoints
-   ```
-   Add `--verify_md5` flag to verify MD5 checksums of downloaded files. If checksums don't match, models will be automatically redownloaded.
+| Models | Link | Download Command | Notes |
+|--------|------|------------------|-------|
+| Cosmos-Predict2-2B-Text2Image | [🤗 Huggingface](https://huggingface.co/nvidia/Cosmos-Predict2-2B-Text2Image) | `python -m scripts.download_checkpoints --model_types text2image --model_sizes 2B` | N/A |
+| Cosmos-Predict2-14B-Text2Image | [🤗 Huggingface](https://huggingface.co/nvidia/Cosmos-Predict2-14B-Text2Image) | `python -m scripts.download_checkpoints --model_types text2image --model_sizes 14B` | N/A |
+| Cosmos-Predict2-2B-Video2World | [🤗 Huggingface](https://huggingface.co/nvidia/Cosmos-Predict2-2B-Video2World) | `python -m scripts.download_checkpoints --model_types video2world --model_sizes 2B` | Download 720P, 16FPS by default. Supports 480P and 720P resolution. Supports 10FPS and 16FPS |
+| Cosmos-Predict2-14B-Video2World | [🤗 Huggingface](https://huggingface.co/nvidia/Cosmos-Predict2-14B-Video2World) | `python -m scripts.download_checkpoints --model_types video2world --model_sizes 14B` | Download 720P, 16FPS by default. Supports 480P and 720P resolution. Supports 10FPS and 16FPS |
+| Cosmos-Predict2-2B-Sample-Action-Conditioned | [🤗 Huggingface](https://huggingface.co/nvidia/Cosmos-Predict2-2B-Sample-Action-Conditioned) | `` | Supports 480P and 4FPS. |
+
+For Video2World model with different resolution and FPS, you can pass `resolution` and `fps` flag to control which model checkpoint to download. For example, if you want a 2B model with 480P and 10FPS, you can do
+```
+python -m scripts.download_checkpoints --model_types video2world --model_sizes 2B --resolution 480 --fps 10
+```
+
+You can pass `--checkpoint_dir <path to ckpt>` if you want to control where to put the checkpoints.
+You can also add `--verify_md5` flag to verify MD5 checksums of downloaded files. If checksums don't match, models will be automatically redownloaded.
 
 ## Troubleshooting
 
