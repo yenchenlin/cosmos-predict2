@@ -74,6 +74,20 @@ def parse_args() -> argparse.Namespace:
         help="Size of the model to use for video-to-world generation",
     )
     parser.add_argument(
+        "--resolution",
+        choices=["480", "720"],
+        default="720",
+        type=str,
+        help="Resolution of the model to use for video-to-world generation",
+    )
+    parser.add_argument(
+        "--fps",
+        choices=[10, 16],
+        default=16,
+        type=int,
+        help="FPS of the model to use for video-to-world generation",
+    )
+    parser.add_argument(
         "--dit_path",
         type=str,
         default="",
@@ -139,16 +153,27 @@ def setup_pipeline(args: argparse.Namespace):
     log.info(f"Using model size: {args.model_size}")
     if args.model_size == "2B":
         config = PREDICT2_VIDEO2WORLD_PIPELINE_2B
-        dit_path = "checkpoints/nvidia/Cosmos-Predict2-2B-Video2World/model-720p-16fps.pt"
+        
+        config.resolution = args.resolution
+        if args.fps == 10: # default is 16 so no need to change config
+            config.state_t = 16
+
+        dit_path = f"checkpoints/nvidia/Cosmos-Predict2-2B-Video2World/model-{args.resolution}p-{args.fps}fps.pt"
     elif args.model_size == "14B":
         config = PREDICT2_VIDEO2WORLD_PIPELINE_14B
-        dit_path = "checkpoints/nvidia/Cosmos-Predict2-14B-Video2World/model-720p-16fps.pt"
+
+        config.resolution = args.resolution
+        if args.fps == 10: # default is 16 so no need to change config
+            config.state_t = 16
+
+        dit_path = f"checkpoints/nvidia/Cosmos-Predict2-14B-Video2World/model-{args.resolution}p-{args.fps}fps.pt"
     else:
         raise ValueError("Invalid model size. Choose either '2B' or '14B'.")
     if hasattr(args, 'dit_path') and args.dit_path:
         dit_path = args.dit_path
 
     text_encoder_path = "checkpoints/google-t5/t5-11b"
+    log.info(f"Using dit_path: {dit_path}")
 
     misc.set_random_seed(seed=args.seed, by_rank=True)
     # Initialize cuDNN.
@@ -216,7 +241,11 @@ def process_single_generation(
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
         log.info(f"Saving generated video to: {output_path}")
-        save_image_or_video(video, output_path, fps=16)
+        if pipe.config.state_t == 16:
+            fps = 10
+        else:
+            fps = 16
+        save_image_or_video(video, output_path, fps=fps)
         log.success(f"Successfully saved video to: {output_path}")
         return True
     return False
