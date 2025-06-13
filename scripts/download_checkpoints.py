@@ -33,23 +33,23 @@ def parse_args():
     parser.add_argument(
         "--model_types",
         nargs="*",
-        default=["text2image", "video2world"],
-        choices=["text2image", "video2world"],
-        help="Which model types to download. Possible values: text2image, video2world",
+        default=["text2image", "video2world", "sample_action_conditioned"],
+        choices=["text2image", "video2world", "sample_action_conditioned"],
+        help="Which model types to download. Possible values: text2image, video2world, sample_action_conditioned",
     )
     parser.add_argument(
         "--fps",
         nargs="*",
-        default=["16", "10"],
+        default=["16"],
         choices=["16", "10"],
-        help="Which fps to download. Possible values: 16, 10. This is only for Video2World models and will be ignored for Text2Image models.",
+        help="Which fps to download. Possible values: 16, 10. This is only for Video2World models and will be ignored for other model_types",
     )
     parser.add_argument(
         "--resolution",
         nargs="*",
-        default=["480", "720"],
+        default=["720"],
         choices=["480", "720"],
-        help="Which resolution to download. Possible values: 480, 720. This is only for Video2World models and will be ignored for Text2Image models.",
+        help="Which resolution to download. Possible values: 480, 720. This is only for Video2World models and will be ignored for other model_types",
     )
     parser.add_argument(
         "--checkpoint_dir", type=str, default="checkpoints", help="Directory to save the downloaded checkpoints."
@@ -84,6 +84,8 @@ MD5_CHECKSUM_LOOKUP = {
     "nvidia/Cosmos-Reason1-7B/model-00002-of-00004.safetensors": "4d5684fca6b056f09f825fe1e436c3ab",
     "nvidia/Cosmos-Reason1-7B/model-00003-of-00004.safetensors": "639e5a2041a4332aefff57a7d7595245",
     "nvidia/Cosmos-Reason1-7B/model-00004-of-00004.safetensors": "63f9e7855dcc6d382d43c2e2411991f1",
+    # Cosmos-Predict2-2B-Sample-Action-Conditioned
+    "nvidia/Cosmos-Predict2-2B-Sample-Action-Conditioned/model-480p-4fps.pt": "b4db0f266cc487f1242dc09a082c6dd5",
     # T5 text encoder
     "google-t5/t5-11b/pytorch_model.bin": "f890878d8a162e0045a25196e27089a3",
     # Cosmos-Guardrail1
@@ -167,6 +169,11 @@ def main(args):
             repo_id = f"nvidia/{model_size_mapping[size]}-{model_type_mapping['video2world']}"
             download_model(args.checkpoint_dir, repo_id, verify_md5=args.verify_md5, allow_patterns="tokenizer/*")
         download_model(args.checkpoint_dir, "nvidia/Cosmos-Reason1-7B", verify_md5=args.verify_md5)
+    
+    if "sample_action_conditioned" in args.model_types:
+        print("NOTE: Sample Action Conditioned model is only available for 2B model size, 480P and 4FPS")
+        repo_id = "nvidia/Cosmos-Predict2-2B-Sample-Action-Conditioned"
+        download_model(args.checkpoint_dir, repo_id, verify_md5=args.verify_md5)
 
     # Download T5 model
     download_model(args.checkpoint_dir, "google-t5/t5-11b", verify_md5=args.verify_md5, ignore_patterns="tf_model.h5")
