@@ -21,47 +21,12 @@ from cosmos_predict2.configs.action_conditional.defaults.conditioner import Acti
 from cosmos_predict2.models.text2image_dit import SACConfig
 from cosmos_predict2.models.video2world_dit_action import ActionConditionalMinimalV1LVGDiT
 from cosmos_predict2.tokenizers.tokenizer import TokenizerInterface
+from cosmos_predict2.configs.base.config_video2world import Video2WorldPipelineConfig
 from imaginaire.config import make_freezable
 from imaginaire.lazy_config import LazyCall as L
 from imaginaire.lazy_config import LazyDict
 from cosmos_predict2.configs.base.config_video2world import ConditioningStrategy, CosmosReason1Config, CosmosGuardrailConfig, SolverTimestampConfig
 
-
-'''
-docker run --gpus all -it --rm \
--v ~/cosmos-predict2:/workspace \
--v /media/ssd0/weichengt/wm_diffusion_misc/dataset:/workspace/datasets \
--v /media/ssd0/weichengt/cosmos-predict2-ckpt:/workspace/checkpoints \
-nvcr.io/nvidia/cosmos/cosmos-predict2-container:1.0
-'''
-
-
-
-@make_freezable
-@attrs.define(slots=False)
-class ActionConditionalVideo2WorldPipelineConfig:
-    adjust_video_noise: bool
-    conditioner: LazyDict
-    conditioning_strategy: str
-    min_num_conditional_frames: int
-    max_num_conditional_frames: int
-    sigma_conditional: float
-    net: LazyDict
-    tokenizer: LazyDict
-    prompt_refiner_config: CosmosReason1Config
-    guardrail_config: CosmosGuardrailConfig
-    precision: str
-    rectified_flow_t_scaling_factor: float
-    resize_online: bool
-    resolution: str
-    ema: EMAConfig
-    sigma_data: float = 1.0
-    state_ch: int = 16
-    state_t: int = 24
-    text_encoder_class: str = "T5"
-    input_data_key: str = "video"
-    input_image_key: str = "images"
-    timestamps: SolverTimestampConfig = attrs.field(factory=SolverTimestampConfig)
 
 
 # Cosmos Predict2 Video2World 2B
@@ -94,10 +59,11 @@ ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_NET_2B = L(ActionConditionalMinimalV1LVG
         every_n_blocks=1,
         mode="predict2_2b_720",
     ),
+    # NOTE: add action dimension
     action_dim=7*12,
 )
 
-ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B = ActionConditionalVideo2WorldPipelineConfig(
+ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B = Video2WorldPipelineConfig(
     adjust_video_noise=True,
     conditioner=L(ActionConditionalConditioner)(
         fps=L(ReMapkey)(
@@ -149,6 +115,7 @@ ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B = ActionConditionalVideo2Wor
         name="tokenizer",
         vae_pth="checkpoints/nvidia/Cosmos-Predict2-2B-Video2World/tokenizer/tokenizer.pth",
     ),
+    # disable prompt refiner and guardrail for action conditional
     prompt_refiner_config=CosmosReason1Config(
         checkpoint_dir="checkpoints/nvidia/Cosmos-Reason1-7B",
         offload_model_to_cpu=True,

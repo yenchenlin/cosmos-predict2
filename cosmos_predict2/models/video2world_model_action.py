@@ -14,72 +14,15 @@
 # limitations under the License.
 
 import math
-from typing import Any, Dict, Mapping, Tuple
 
-import attrs
 import torch
-from einops import rearrange
 from megatron.core import parallel_state
 from torch.distributed.device_mesh import init_device_mesh
-from torch.distributed.tensor import DTensor
-from torch.nn.modules.module import _IncompatibleKeys
-
-from cosmos_predict2.conditioner import DataType, T2VCondition
-from cosmos_predict2.configs.action_conditional.config_action_conditional import (
-    ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B,
-    ActionConditionalVideo2WorldPipelineConfig,
-)
-from cosmos_predict2.networks.model_weights_stats import WeightTrainingStat
 from cosmos_predict2.pipelines.video2world_action import ActionConditionalVideo2WorldPipeline
-from cosmos_predict2.utils.checkpointer import non_strict_load_model
-from cosmos_predict2.utils.optim_instantiate import get_base_scheduler
-from cosmos_predict2.models.video2world_model import Predict2Video2WorldModel
-from imaginaire.lazy_config import LazyDict, instantiate
+from cosmos_predict2.models.video2world_model import Predict2Video2WorldModel, Predict2Video2WorldModelConfig
 from imaginaire.model import ImaginaireModel
 from imaginaire.utils import log
 
-
-@attrs.define(slots=False)
-class Predict2ModelManagerConfig:
-    # Local path, use it in fast debug run
-    dit_path: str = "checkpoints/nvidia/Cosmos-Predict2-2B-Video2World/model-720p-16fps.pt"
-    dit_ema_path: str = "checkpoints/nvidia/Cosmos-Predict2-2B-Video2World/model-720p-16fps.pt"
-    # For inference
-    text_encoder_path: str = ""  # not used in training.
-
-
-@attrs.define(slots=False)
-class Predict2Video2WorldModelConfig:
-    learning_rate: float = 2 ** (-14.5)
-    train_architecture: str = "base"
-    lora_rank: int = 16
-    lora_alpha: int = 16
-    lora_target_modules: str = "q_proj,k_proj,v_proj,output_proj,mlp.layer1,mlp.layer2"
-    init_lora_weights: bool = True
-    use_gradient_checkpointing: bool = True
-    use_gradient_checkpointing_offload: bool = False
-    use_selective_activation_checkpointing: bool = False
-    compute_latents_online: bool = False
-    num_video_frames: int = 81
-    resolution: str = "720"
-
-    precision: str = "bfloat16"
-    input_data_key: str = "video"
-    input_image_key: str = "images"
-    loss_reduce: str = "mean"
-    loss_scale: float = 10.0
-
-    adjust_video_noise: bool = True
-
-    # This is used for the original way to load models
-    model_manager_config: Predict2ModelManagerConfig = Predict2ModelManagerConfig()
-    # This is a new way to load models
-    pipe_config: ActionConditionalVideo2WorldPipelineConfig = ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B
-    # debug flag
-    debug_without_randomness: bool = False
-    fsdp_shard_size: int = 0  # 0 means not using fsdp, -1 means set to world size
-    # High sigma strategy
-    high_sigma_ratio: float = 0.0
 
 
 class ActionConditionalPredict2Video2WorldModel(Predict2Video2WorldModel):

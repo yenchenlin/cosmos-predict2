@@ -17,7 +17,6 @@ from typing import Any
 
 import numpy as np
 import torch
-import pdb
 
 from megatron.core import parallel_state
 
@@ -25,9 +24,7 @@ from cosmos_predict2.auxiliary.cosmos_reason1 import CosmosReason1
 from cosmos_predict2.auxiliary.text_encoder import CosmosT5TextEncoder
 
 from cosmos_predict2.pipelines.video2world import Video2WorldPipeline
-from cosmos_predict2.configs.action_conditional.config_action_conditional import (
-    ActionConditionalVideo2WorldPipelineConfig,
-)
+from cosmos_predict2.configs.base.config_video2world import Video2WorldPipelineConfig
 from cosmos_predict2.models.utils import load_state_dict
 from cosmos_predict2.module.denoiser_scaling import RectifiedFlowScaling
 from cosmos_predict2.schedulers.rectified_flow_scheduler import (
@@ -53,7 +50,7 @@ class ActionConditionalVideo2WorldPipeline(Video2WorldPipeline):
 
     @staticmethod
     def from_config(
-        config: ActionConditionalVideo2WorldPipelineConfig,
+        config: Video2WorldPipelineConfig,
         dit_path: str = "",
         text_encoder_path: str = "",
         device: str = "cuda",

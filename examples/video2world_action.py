@@ -33,9 +33,6 @@ from cosmos_predict2.pipelines.video2world_action import ActionConditionalVideo2
 from imaginaire.utils import distributed, log, misc
 from imaginaire.utils.io import save_image_or_video
 
-_DEFAULT_NEGATIVE_PROMPT = "The video captures a series of frames showing ugly scenes, static with no motion, motion blur, over-saturation, shaky footage, low resolution, grainy texture, pixelated images, poorly lit areas, underexposed and overexposed scenes, poor color balance, washed out colors, choppy sequences, jerky movements, low frame rate, artifacting, color banding, unnatural transitions, outdated special effects, fake elements, unconvincing visuals, poorly edited content, jump cuts, visual noise, and flickering. Overall, the video is of poor quality."
-
-
 '''
 python -m examples.video2world_action \
   --model_size 2B \

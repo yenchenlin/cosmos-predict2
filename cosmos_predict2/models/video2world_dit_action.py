@@ -88,7 +88,6 @@ class ActionConditionalMinimalV1LVGDiT(MinimalV1LVGDiT):
             x_B_C_T_H_W = torch.cat(
                 [x_B_C_T_H_W, torch.zeros((B, 1, T, H, W), dtype=x_B_C_T_H_W.dtype, device=x_B_C_T_H_W.device)], dim=1
             )
-
         # NOTE: project action to action embedding
         assert action is not None, "action must be provided"
         action = rearrange(action, "b t d -> b 1 (t d)")

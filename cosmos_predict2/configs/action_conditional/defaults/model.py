@@ -19,9 +19,8 @@ from cosmos_predict2.configs.action_conditional.config_action_conditional import
 )
 from cosmos_predict2.models.video2world_model_action import (
     ActionConditionalPredict2Video2WorldModel,
-    Predict2ModelManagerConfig,
-    Predict2Video2WorldModelConfig,
 )
+from cosmos_predict2.models.video2world_model import Predict2ModelManagerConfig, Predict2Video2WorldModelConfig
 from imaginaire.lazy_config import LazyCall as L
 
 ACTION_CONDITIONAL_PREDICT2_V2W_2B_FSDP_CONFIG = dict(
