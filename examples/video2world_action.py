@@ -16,6 +16,7 @@
 import argparse
 import json
 import os
+import numpy as np
 
 # Set TOKENIZERS_PARALLELISM environment variable to avoid deadlocks with multiprocessing
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -27,12 +28,18 @@ from tqdm import tqdm
 from cosmos_predict2.configs.action_conditional.config_action_conditional import (
     ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B,
 )
-from cosmos_predict2.pipelines.video2world_action import _IMAGE_EXTENSIONS, _VIDEO_EXTENSIONS, Video2WorldPipeline
+from cosmos_predict2.pipelines.video2world_action import _IMAGE_EXTENSIONS, _VIDEO_EXTENSIONS, ActionConditionalVideo2WorldPipeline
 from imaginaire.utils import distributed, log, misc
 from imaginaire.utils.io import save_image_or_video
 
 _DEFAULT_NEGATIVE_PROMPT = "The video captures a series of frames showing ugly scenes, static with no motion, motion blur, over-saturation, shaky footage, low resolution, grainy texture, pixelated images, poorly lit areas, underexposed and overexposed scenes, poor color balance, washed out colors, choppy sequences, jerky movements, low frame rate, artifacting, color banding, unnatural transitions, outdated special effects, fake elements, unconvincing visuals, poorly edited content, jump cuts, visual noise, and flickering. Overall, the video is of poor quality."
 
+
+'''
+python -m examples.video2world_action \
+  --model_size 2B \
+  --batch_input_json dream_gen_benchmark/gr1_object/batch_input.json
+'''
 
 def validate_input_file(input_path: str, num_conditional_frames: int) -> bool:
     if not os.path.exists(input_path):
@@ -64,11 +71,21 @@ def validate_input_file(input_path: str, num_conditional_frames: int) -> bool:
     return True
 
 
+def get_action_sequence(annotation_folder='bridge/annotation/test_100', img_id='13'):
+    annotation_path = os.path.join(annotation_folder, f'{img_id}.json')
+    with open(annotation_path, "r") as file:
+        data = json.load(file)
+
+    action_ee = np.array(data["action"])[:, :6] * 20
+    gripper = np.array(data["continuous_gripper_state"])[1:, None]
+    action = np.concatenate([action_ee, gripper], axis=1)
+    return action
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Video-to-World Generation with Cosmos Predict2")
     parser.add_argument(
         "--model_size",
-        choices=["2B", "14B"],
+        choices=["2B"],
         default="2B",
         help="Size of the model to use for video-to-world generation",
     )
@@ -85,7 +102,13 @@ def parse_args() -> argparse.Namespace:
         help="Text prompt for video generation",
     )
     parser.add_argument(
-        "--input_path",
+        "--input_base_folder",
+        type=str,
+        default="assets/video2world/input0.jpg",
+        help="Path to input image or video for conditioning (include file extension)",
+    )
+    parser.add_argument(
+        "--input_annotation_folder",
         type=str,
         default="assets/video2world/input0.jpg",
         help="Path to input image or video for conditioning (include file extension)",
@@ -100,7 +123,7 @@ def parse_args() -> argparse.Namespace:
         "--num_conditional_frames",
         type=int,
         default=1,
-        choices=[1, 5],
+        choices=[1],
         help="Number of frames to condition on (1 for single frame, 5 for multi-frame conditioning)",
     )
     parser.add_argument(
@@ -134,7 +157,7 @@ def setup_pipeline(args: argparse.Namespace):
     log.info(f"Using model size: {args.model_size}")
     if args.model_size == "2B":
         config = ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B
-        dit_path = "checkpoints/nvidia/Cosmos-Predict2-2B-Video2World/model-720p-16fps.pt"
+        dit_path = "checkpoints/model_action_seq_2B.pth"
     else:
         raise ValueError("Invalid model size. Choose either '2B' or '14B'.")
     if hasattr(args, 'dit_path') and args.dit_path:
@@ -169,7 +192,7 @@ def setup_pipeline(args: argparse.Namespace):
 
     # Load models
     log.info(f"Initializing Video2WorldPipeline with model size: {args.model_size}")
-    pipe = Video2WorldPipeline.from_config(
+    pipe = ActionConditionalVideo2WorldPipeline.from_config(
         config=config,
         dit_path=dit_path,
         text_encoder_path=text_encoder_path,
@@ -212,7 +235,7 @@ def process_single_generation(
     return False
 
 
-def generate_video(args: argparse.Namespace, pipe: Video2WorldPipeline) -> None:
+def generate_video(args: argparse.Namespace, pipe: ActionConditionalVideo2WorldPipeline) -> None:
     # Video-to-World
     if args.batch_input_json is not None:
         # Process batch inputs from JSON file

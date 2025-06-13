@@ -18,6 +18,7 @@ from typing import List, Optional, Tuple
 import torch
 import torch.nn as nn
 
+from einops import rearrange
 from cosmos_predict2.models.video2world_dit import MinimalV1LVGDiT
 from cosmos_predict2.conditioner import DataType
 
@@ -46,14 +47,14 @@ class ActionConditionalMinimalV1LVGDiT(MinimalV1LVGDiT):
         super().__init__(*args, **kwargs)
 
         self.action_embedder_B_D = Mlp(
-            in_features=7,
+            in_features=7*12,
             hidden_features=self.model_channels * 4,
             out_features=self.model_channels,
             act_layer=lambda: nn.GELU(approximate="tanh"),
             drop=0,
         )
         self.action_embedder_B_3D = Mlp(
-            in_features=7,
+            in_features=7*12,
             hidden_features=self.model_channels * 4,
             out_features=self.model_channels * 3,
             act_layer=lambda: nn.GELU(approximate="tanh"),
@@ -85,6 +86,7 @@ class ActionConditionalMinimalV1LVGDiT(MinimalV1LVGDiT):
 
         # NOTE: project action to action embedding
         assert action is not None, "action must be provided"
+        action = rearrange(action, "b t d -> b 1 (t d)")
         action_emb_B_D = self.action_embedder_B_D(action)
         action_emb_B_3D = self.action_embedder_B_3D(action)
 
