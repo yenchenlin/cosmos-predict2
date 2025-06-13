@@ -67,7 +67,7 @@ For example,
 example_video_dataset = L(Dataset)(
     dataset_dir="datasets/benchmark_train/custom_dataset",
     num_frames=93,
-    video_size=(720, 1280),
+    video_size=(704, 1280),
 )
 
 dataloader_train = L(DataLoader)(
