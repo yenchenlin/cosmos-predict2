@@ -32,10 +32,9 @@ Run the following command to execute an example post-training job with Bridge da
 ```bash
 torchrun --nproc_per_node=2 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/base/config.py -- experiment="action_conditional_predict2_video2world_2b_training"
 ```
-
-The model will be post-trained using the Bridge dataset. See `cosmos_predict2/configs/action_conditional/defaults/data.py` to understand how the dataloader is defined.
-
-To add action as additional condition, we create new `conditioner` to support action in `cosmos_predict2/configs/action_conditional/defaults/conditioner.py`.
+See `cosmos_predict2/configs/action_conditional/defaults/data.py` to understand how the dataloader is defined.
+To add action as additional condition, we create new `conditioner` to support action in `cosmos_predict2/confi
+gs/action_conditional/defaults/conditioner.py`.
 
 The checkpoints will be saved to checkpoints/PROJECT/GROUP/NAME. In the above example, PROJECT is `posttraining`, GROUP is `video2world`, NAME is `action_conditional_predict2_video2world_2b_training_${now:%Y-%m-%d}_${now:%H-%M-%S}`.
 
