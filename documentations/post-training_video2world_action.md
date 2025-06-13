@@ -10,8 +10,9 @@ under `cosmos-predict2/` folder, run:
 ```
 wget https://lf-robot-opensource.bytetos.com/obj/lab-robot-public/opensource_IRASim_v1/bridge_train_data.tar.gz
 mv bridge_train_data.tar.gz datasets/
-tar -xvzf your_file.tar.gz -C .
-mv bridge/opensource_robotdata/bridge ./
+cd datasets
+tar -xvzf bridge_train_data.tar.gz -C .
+mv opensource_robotdata/bridge ./
 ```
 
 Dataset folder format:

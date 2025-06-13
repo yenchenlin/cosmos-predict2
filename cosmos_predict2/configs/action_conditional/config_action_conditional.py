@@ -94,6 +94,7 @@ ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_NET_2B = L(ActionConditionalMinimalV1LVG
         every_n_blocks=1,
         mode="predict2_2b_720",
     ),
+    action_dim=7*12,
 )
 
 ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B = ActionConditionalVideo2WorldPipelineConfig(

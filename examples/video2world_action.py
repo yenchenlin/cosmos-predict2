@@ -39,8 +39,8 @@ _DEFAULT_NEGATIVE_PROMPT = "The video captures a series of frames showing ugly s
 '''
 python -m examples.video2world_action \
   --model_size 2B \
-  --input_video datasets/bridge/opensource_robotdata/bridge/videos/test/13/rgb.mp4 \
-  --input_annotation datasets/bridge/opensource_robotdata/bridge/annotation/test/13.json \
+  --input_video datasets/bridge/videos/test/13/rgb.mp4 \
+  --input_annotation datasets/bridge/annotation/test/13.json \
   --num_conditional_frames 1 \
   --save_path output/generated_video.mp4 \
   --guidance 0 \

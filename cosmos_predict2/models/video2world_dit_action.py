@@ -44,24 +44,27 @@ class Mlp(nn.Module):
 
 class ActionConditionalMinimalV1LVGDiT(MinimalV1LVGDiT):
     def __init__(self, *args, **kwargs):
+        assert 'action_dim' in kwargs, "action_dim must be provided"
+        action_dim = kwargs['action_dim']
+        del kwargs['action_dim']
         super().__init__(*args, **kwargs)
-        self.create_action_embedder()
 
-    def create_action_embedder(self):
+
         self.action_embedder_B_D = Mlp(
-            in_features=7*12,
+            in_features=action_dim,
             hidden_features=self.model_channels * 4,
             out_features=self.model_channels,
             act_layer=lambda: nn.GELU(approximate="tanh"),
             drop=0,
         )
         self.action_embedder_B_3D = Mlp(
-            in_features=7*12,
+            in_features=action_dim,
             hidden_features=self.model_channels * 4,
             out_features=self.model_channels * 3,
             act_layer=lambda: nn.GELU(approximate="tanh"),
             drop=0,
         )
+
 
     def forward(
         self,

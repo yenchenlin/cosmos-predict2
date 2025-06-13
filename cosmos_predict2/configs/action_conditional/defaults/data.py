@@ -22,10 +22,9 @@ from torch.utils.data import DataLoader, DistributedSampler
 from cosmos_predict2.data.action_conditional.action_conditional_dataset import ActionConditionalDataset
 from imaginaire.lazy_config import LazyCall as L
 
-# base_path = "./datasets/bridge/"
-base_path = "./datasets/bridge/opensource_robotdata/bridge"
-# train_annotation_path = os.path.join(base_path, "annotation/train")
-train_annotation_path = os.path.join(base_path, "annotation/train_subset")
+base_path = "./datasets/bridge/"
+train_annotation_path = os.path.join(base_path, "annotation/train")
+# train_annotation_path = os.path.join(base_path, "annotation/train_subset")
 val_annotation_path = os.path.join(base_path, "annotation/val")
 test_annotation_path = os.path.join(base_path, "annotation/test")
 
@@ -39,7 +38,7 @@ bridge_train_dataset = L(ActionConditionalDataset)(
     num_frames=13,
     cam_ids=[0],
     accumulate_action=False,
-    video_size=[256, 320],
+    video_size=[480, 640],
     val_start_frame_interval=1,
     mode="train",
 )
@@ -53,7 +52,7 @@ bridge_val_dataset = L(ActionConditionalDataset)(
     num_frames=13,
     cam_ids=[0],
     accumulate_action=False,
-    video_size=[256, 320],
+    video_size=[480, 640],
     val_start_frame_interval=1,
     mode="val",
 )
