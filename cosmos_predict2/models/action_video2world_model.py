@@ -30,8 +30,6 @@ class ActionConditionedPredict2Video2WorldModel(Predict2Video2WorldModel):
         super(ImaginaireModel, self).__init__()
         # New code, added for i4 adaption
         learning_rate = config.learning_rate
-        use_gradient_checkpointing = config.use_gradient_checkpointing
-        use_gradient_checkpointing_offload = config.use_gradient_checkpointing_offload
 
         self.config = config
 
@@ -112,5 +110,3 @@ class ActionConditionedPredict2Video2WorldModel(Predict2Video2WorldModel):
             log.info("FSDP (Fully Sharded Data Parallel) is disabled.")
 
         self.learning_rate = learning_rate
-        self.use_gradient_checkpointing = use_gradient_checkpointing
-        self.use_gradient_checkpointing_offload = use_gradient_checkpointing_offload
