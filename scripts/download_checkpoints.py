@@ -80,10 +80,10 @@ MD5_CHECKSUM_LOOKUP = {
     "nvidia/Cosmos-Predict2-2B-Video2World/tokenizer/tokenizer.pth": "854fcb755005951fa5b329799af6199f",
     "nvidia/Cosmos-Predict2-14B-Video2World/tokenizer/tokenizer.pth": "854fcb755005951fa5b329799af6199f",
     # Cosmos-Reason1-7B
-    "nvidia/Cosmos-Reason1-7B/model-00001-of-00004.safetensors": "40e531a49383b8ea73273d2e1fe59a4f",
-    "nvidia/Cosmos-Reason1-7B/model-00002-of-00004.safetensors": "4d5684fca6b056f09f825fe1e436c3ab",
-    "nvidia/Cosmos-Reason1-7B/model-00003-of-00004.safetensors": "639e5a2041a4332aefff57a7d7595245",
-    "nvidia/Cosmos-Reason1-7B/model-00004-of-00004.safetensors": "63f9e7855dcc6d382d43c2e2411991f1",
+    "nvidia/Cosmos-Reason1-7B/model-00001-of-00004.safetensors": "90198d3b3dab5a00b7b9288cecffa5e9",
+    "nvidia/Cosmos-Reason1-7B/model-00002-of-00004.safetensors": "6bde197d212f2a83ae19585b87de500e",
+    "nvidia/Cosmos-Reason1-7B/model-00003-of-00004.safetensors": "c999ec0bc79fccf2f2cdba598d4e951f",
+    "nvidia/Cosmos-Reason1-7B/model-00004-of-00004.safetensors": "232e93dfc82361ea8b0678fffc8660ef",
     # Cosmos-Predict2-2B-Sample-Action-Conditioned
     "nvidia/Cosmos-Predict2-2B-Sample-Action-Conditioned/model-480p-4fps.pt": "b4db0f266cc487f1242dc09a082c6dd5",
     # T5 text encoder
