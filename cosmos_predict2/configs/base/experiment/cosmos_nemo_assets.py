@@ -36,8 +36,8 @@ cs = ConfigStore.instance()
 # Cosmos-NeMo-Assets example
 example_video_dataset_cosmos_nemo_assets = L(Dataset)(
     dataset_dir="datasets/benchmark_train/cosmos_nemo_assets",
-    num_frames=77,
-    video_size=(720, 1280),
+    num_frames=93,
+    video_size=(704, 1280),
 )
 
 dataloader_train_cosmos_nemo_assets = L(DataLoader)(
