@@ -28,7 +28,8 @@ from tqdm import tqdm
 from cosmos_predict2.configs.action_conditional.config_action_conditional import (
     ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B,
 )
-from cosmos_predict2.pipelines.video2world_action import _IMAGE_EXTENSIONS, _VIDEO_EXTENSIONS, ActionConditionalVideo2WorldPipeline
+from cosmos_predict2.pipelines.video2world_action import ActionConditionalVideo2WorldPipeline
+from cosmos_predict2.pipelines.video2world import _IMAGE_EXTENSIONS, _VIDEO_EXTENSIONS
 from imaginaire.utils import distributed, log, misc
 from imaginaire.utils.io import save_image_or_video
 
@@ -39,7 +40,12 @@ _DEFAULT_NEGATIVE_PROMPT = "The video captures a series of frames showing ugly s
 python -m examples.video2world_action \
   --model_size 2B \
   --batch_input_json dream_gen_benchmark/gr1_object/batch_input.json \
-  --input_video assets/video2world/input0.jpg \
+  --input_video datasets/bridge/videos/test/13/rgb.mp4 \
+  --input_annotation datasets/bridge/annotation/test/13.json \
+  --num_conditional_frames 1 \
+  --save_path output/generated_video.mp4 \
+  --guidance 7 \
+  --seed 0 
 '''
 
 def validate_input_file(input_path: str, num_conditional_frames: int) -> bool:
@@ -72,8 +78,7 @@ def validate_input_file(input_path: str, num_conditional_frames: int) -> bool:
     return True
 
 
-def get_action_sequence(annotation_folder='bridge/annotation/test_100', img_id='13'):
-    annotation_path = os.path.join(annotation_folder, f'{img_id}.json')
+def get_action_sequence(annotation_path):
     with open(annotation_path, "r") as file:
         data = json.load(file)
 
@@ -209,9 +214,9 @@ def process_single_generation(
     pipe, input_path, prompt, output_path, negative_prompt, num_conditional_frames, guidance, seed
 ):
     # Validate input file
-    if not validate_input_file(input_path, num_conditional_frames):
-        log.warning(f"Input file validation failed: {input_path}")
-        return False
+    # if not validate_input_file(input_path, num_conditional_frames):
+    #     log.warning(f"Input file validation failed: {input_path}")
+    #     return False
 
     log.info(f"Running Video2WorldPipeline\ninput: {input_path}\nprompt: {prompt}")
 
@@ -237,6 +242,21 @@ def process_single_generation(
 
 
 def generate_video(args: argparse.Namespace, pipe: ActionConditionalVideo2WorldPipeline) -> None:
+    actions = get_action_sequence(args.input_annotation)
+    process_single_generation(
+        pipe=pipe,
+        input_path=args.input_video,
+        prompt=args.prompt,
+        output_path=args.save_path,
+        negative_prompt=args.negative_prompt,
+        num_conditional_frames=args.num_conditional_frames,
+        guidance=args.guidance,
+        seed=args.seed,
+    )
+    return
+    
+    
+    
     # Video-to-World
     if args.batch_input_json is not None:
         # Process batch inputs from JSON file

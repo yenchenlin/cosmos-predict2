@@ -119,7 +119,6 @@ class Predict2Video2WorldModel(ImaginaireModel):
         else:
             self.data_parallel_size = 1
 
-        torch.distributed.breakpoint()
         # New way to init pipe
         self.pipe = Video2WorldPipeline.from_config(
             config.pipe_config,
