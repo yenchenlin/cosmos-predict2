@@ -134,7 +134,7 @@ class ActionConditionalVideo2WorldPipeline(Video2WorldPipeline):
         else:
             log.warning("dit_path not provided, initializing DiT with random weights")
         # with init_weights_on_device():
-        # NOTE: we don't load checkpoint on meta device
+        # NOTE: we don't load checkpoint on meta device since we have additional action encoder
         dit_config = config.net
         pipe.dit = instantiate(dit_config).eval()  # inference
 
@@ -200,7 +200,7 @@ class ActionConditionalVideo2WorldPipeline(Video2WorldPipeline):
         data_batch = {
             "dataset_name": "video_data",
             "video": video,
-            # "t5_text_embeddings": self.encode_prompt(prompt).to(dtype=self.torch_dtype),
+            # NOTE: we don't use text embeddings for action conditional video2world
             "t5_text_embeddings": torch.zeros(self.batch_size, 512, 1024, dtype=torch.bfloat16).cuda(),
             "fps": torch.randint(16, 32, (self.batch_size,)),  # Random FPS (might be used by model)
             "padding_mask": torch.zeros(self.batch_size, 1, H, W),  # Padding mask (assumed no padding here)

@@ -119,7 +119,7 @@ class ActionConditionalPredict2Video2WorldModel(Predict2Video2WorldModel):
         else:
             self.data_parallel_size = 1
 
-        # replace the pipeline with action-conditioning
+        # NOTE:replace the pipeline with action-conditioning
         self.pipe = ActionConditionalVideo2WorldPipeline.from_config(
             config.pipe_config,
             dit_path=config.model_manager_config.dit_path,

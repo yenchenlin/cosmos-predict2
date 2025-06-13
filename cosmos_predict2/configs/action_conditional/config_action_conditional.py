@@ -120,6 +120,7 @@ ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B = ActionConditionalVideo2Wor
             input_key="fps",
             output_key="use_video_condition",
         ),
+        # NOTE: add additional action as condition
         action=L(ReMapkey)(
             input_key="action",
             output_key="action",

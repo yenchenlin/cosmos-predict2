@@ -32,29 +32,51 @@ Run the following command to execute an example post-training job with Bridge da
 torchrun --nproc_per_node=2 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/base/config.py -- experiment="action_conditional_predict2_video2world_2b_training"
 ```
 
-The model will be post-trained using the Bridge dataset. See the config predict2_video2world_training_2b_groot_gr1_480 defined in cosmos_predict2/configs/base/experiment/groot.py to understand how the dataloader is defined.
+The model will be post-trained using the Bridge dataset. See `cosmos_predict2/configs/action_conditional/defaults/data.py` to understand how the dataloader is defined.
 
+To add action as additional condition, we create new `conditioner` to support action in `cosmos_predict2/configs/action_conditional/defaults/conditioner.py`.
 
-The checkpoints will be saved to checkpoints/PROJECT/GROUP/NAME. In the above example, PROJECT is posttraining, GROUP is video2world, NAME is 2b_groot_gr1_480.
+The checkpoints will be saved to checkpoints/PROJECT/GROUP/NAME. In the above example, PROJECT is `posttraining`, GROUP is `video2world`, NAME is `action_conditional_predict2_video2world_2b_training_${now:%Y-%m-%d}_${now:%H-%M-%S}`.
 
 See the job config to understand how they are determined.
 ```python
-predict2_video2world_training_2b_groot_gr1_480 = dict(
-    dict(
-        ...
-        job=dict(
-            project="posttraining",
-            group="video2world",
-            name="2b_groot_gr1_480",
-        ),
-        ...
-    )
+action_conditional_predict2_video2world_2b_training = dict(
+    defaults=[
+        {"override /model": "action_conditional_predict2_v2w_2b_fsdp"},
+        {"override /optimizer": "fusedadamw"},
+        {"override /ckpt_type": "standard"},
+        {"override /data_train": "bridge_train"},
+        {"override /data_val": "bridge_val"},
+        "_self_",
+    ],
+    model=dict(
+        config=dict(
+            num_video_frames=13,
+            resolution="720",
+            fsdp_shard_size=8,
+        )
+    ),
+    job=dict(project="posttraining", group="video2world", name="action_conditional_predict2_video2world_2b_training_${now:%Y-%m-%d}_${now:%H-%M-%S}"),
+    ...
 )
 ```
 
 
 ## 3. Inference for Bridge
 
+We release a 2B model post-trained with Bridge dataset
 2B model
 `s3://checkpoints-us-east-1/cosmos_diffusion_v2/action_conditional/action_sequence_conditional-2B-Res-480-640-Fps-16-Note-06_04/checkpoints/iter_000032000`
 
+```
+python -m examples.video2world_action \
+  --model_size 2B \
+  --input_video datasets/bridge/opensource_robotdata/bridge/videos/test/13/rgb.mp4 \
+  --input_annotation datasets/bridge/opensource_robotdata/bridge/annotation/test/13.json \
+  --num_conditional_frames 1 \
+  --save_path output/generated_video.mp4 \
+  --guidance 0 \
+  --seed 0 \
+  --disable_guardrail \
+  --disable_prompt_refiner 
+```

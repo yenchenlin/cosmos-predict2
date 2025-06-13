@@ -24,11 +24,13 @@ from imaginaire.lazy_config import LazyDict
 from cosmos_predict2.configs.vid2vid.defaults.conditioner import Vid2VidCondition, Vid2VidConditioner
 
 
+# NOTE: extend the condition class to include action
 @dataclass(frozen=True)
 class ActionConditionalCondition(Vid2VidCondition):
     action: Optional[torch.Tensor] = None
 
 
+# NOTE: extend the conditioner class to include action
 class ActionConditionalConditioner(Vid2VidConditioner):
     def forward(
         self,
