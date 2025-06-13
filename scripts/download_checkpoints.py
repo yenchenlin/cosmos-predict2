@@ -16,6 +16,7 @@
 import argparse
 import hashlib
 import os
+import fnmatch
 
 from huggingface_hub import snapshot_download
 
@@ -37,6 +38,20 @@ def parse_args():
         help="Which model types to download. Possible values: text2image, video2world",
     )
     parser.add_argument(
+        "--fps",
+        nargs="*",
+        default=["16", "10"],
+        choices=["16", "10"],
+        help="Which fps to download. Possible values: 16, 10. This is only for Video2World models and will be ignored for Text2Image models.",
+    )
+    parser.add_argument(
+        "--resolution",
+        nargs="*",
+        default=["480", "720"],
+        choices=["480", "720"],
+        help="Which resolution to download. Possible values: 480, 720. This is only for Video2World models and will be ignored for Text2Image models.",
+    )
+    parser.add_argument(
         "--checkpoint_dir", type=str, default="checkpoints", help="Directory to save the downloaded checkpoints."
     )
     parser.add_argument(
@@ -50,8 +65,16 @@ MD5_CHECKSUM_LOOKUP = {
     # Cosmos-Predict2 models
     "nvidia/Cosmos-Predict2-2B-Text2Image/model.pt": "0336b218dffe32848d075ba7606c522b",
     "nvidia/Cosmos-Predict2-14B-Text2Image/model.pt": "3bc68c3384b4985120b13f964e9d6c03",
+    # 8 variants of Video2World models
     "nvidia/Cosmos-Predict2-2B-Video2World/model-720p-16fps.pt": "66157e5aece452a5a121cbb6fe0580ac",
+    "nvidia/Cosmos-Predict2-2B-Video2World/model-720p-10fps.pt": "1884e792fe3a57c3384c68ff1c0ef0d3",
+    "nvidia/Cosmos-Predict2-2B-Video2World/model-480p-10fps.pt": "af1e352c5a8fb52ee1de19e307731b6b",
+    "nvidia/Cosmos-Predict2-2B-Video2World/model-480p-16fps.pt": "dad6861b72d595f6fae8d91c08a58e9e",
     "nvidia/Cosmos-Predict2-14B-Video2World/model-720p-16fps.pt": "79c86aa3c91897d9d402e70a3525ed96",
+    "nvidia/Cosmos-Predict2-14B-Video2World/model-720p-10fps.pt": "34730e3d5e65c4c590f3a88ca3fd4e74",
+    "nvidia/Cosmos-Predict2-14B-Video2World/model-480p-10fps.pt": "b1dcd8adbe82e69496532d1e237c7022",
+    "nvidia/Cosmos-Predict2-14B-Video2World/model-480p-16fps.pt": "53a04f51880272d9f4a5c4460b82966d",
+
     "nvidia/Cosmos-Predict2-2B-Text2Image/tokenizer/tokenizer.pth": "854fcb755005951fa5b329799af6199f",
     "nvidia/Cosmos-Predict2-14B-Text2Image/tokenizer/tokenizer.pth": "854fcb755005951fa5b329799af6199f",
     "nvidia/Cosmos-Predict2-2B-Video2World/tokenizer/tokenizer.pth": "854fcb755005951fa5b329799af6199f",
@@ -75,9 +98,19 @@ MD5_CHECKSUM_LOOKUP = {
 }
 
 
-def validate_files(checkpoints_dir, model_name, verify_md5=False):
+def validate_files(checkpoints_dir, model_name, verify_md5=False, **download_kwargs):
     for key, value in MD5_CHECKSUM_LOOKUP.items():
         if key.startswith(model_name + "/"):
+            if "allow_patterns" in download_kwargs:
+                # only check if the key matches the allow_patterns
+                relative_path = key[len(model_name + "/"):]
+                if not fnmatch.fnmatch(relative_path, download_kwargs["allow_patterns"]):
+                    continue
+            if "ignore_patterns" in download_kwargs:
+                # only check if the key does not match the ignore_patterns
+                relative_path = key[len(model_name + "/"):]
+                if any(fnmatch.fnmatch(relative_path, pattern) for pattern in download_kwargs["ignore_patterns"]):
+                    continue
             file_path = os.path.join(checkpoints_dir, key)
             # File must exist
             if not os.path.exists(file_path):
@@ -102,7 +135,7 @@ def download_model(checkpoint_dir, repo_id, verify_md5=False, **download_kwargs)
     local_dir = os.path.join(checkpoint_dir, repo_id)
     try:
         # Check if files exist and optionally verify checksums
-        if not validate_files(checkpoint_dir, repo_id, verify_md5):
+        if not validate_files(checkpoint_dir, repo_id, verify_md5, **download_kwargs):
             print(f"Downloading {repo_id} to {local_dir}...")
             snapshot_download(repo_id=repo_id, local_dir=local_dir, force_download=True, **download_kwargs)
             print(f"\033[92mSuccessfully downloaded {repo_id}\033[0m")
@@ -118,11 +151,21 @@ def main(args):
     # Download the Cosmos-Predict2 models
     model_size_mapping = {"2B": "Cosmos-Predict2-2B", "14B": "Cosmos-Predict2-14B"}
     model_type_mapping = {"text2image": "Text2Image", "video2world": "Video2World"}
-    for size in args.model_sizes:
-        for type in args.model_types:
-            repo_id = f"nvidia/{model_size_mapping[size]}-{model_type_mapping[type]}"
+    if "text2image" in args.model_types:
+        for size in args.model_sizes:
+            repo_id = f"nvidia/{model_size_mapping[size]}-{model_type_mapping['text2image']}"
             download_model(args.checkpoint_dir, repo_id, verify_md5=args.verify_md5)
+
     if "video2world" in args.model_types:
+        for size in args.model_sizes:
+            for fps in args.fps:
+                for res in args.resolution:
+                    repo_id = f"nvidia/{model_size_mapping[size]}-{model_type_mapping['video2world']}"
+                    allow_patterns = f"model-{res}p-{fps}fps.pt"
+                    download_model(args.checkpoint_dir, repo_id, verify_md5=args.verify_md5, allow_patterns=allow_patterns)
+            # donwload the remaining
+            repo_id = f"nvidia/{model_size_mapping[size]}-{model_type_mapping['video2world']}"
+            download_model(args.checkpoint_dir, repo_id, verify_md5=args.verify_md5, allow_patterns="tokenizer/*")
         download_model(args.checkpoint_dir, "nvidia/Cosmos-Reason1-7B", verify_md5=args.verify_md5)
 
     # Download T5 model
