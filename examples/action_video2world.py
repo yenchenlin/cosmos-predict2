@@ -29,7 +29,7 @@ from megatron.core import parallel_state
 from cosmos_predict2.configs.action_conditional.config_action_conditional import (
     ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B,
 )
-from cosmos_predict2.pipelines.video2world_action import ActionConditionalVideo2WorldPipeline
+from cosmos_predict2.pipelines.action_video2world import ActionConditionalVideo2WorldPipeline
 from imaginaire.utils import distributed, log, misc
 from imaginaire.utils.io import save_image_or_video
 

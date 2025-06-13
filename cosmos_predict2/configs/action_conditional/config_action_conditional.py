@@ -19,7 +19,7 @@ from cosmos_predict2.conditioner import BooleanFlag, ReMapkey, TextAttr
 from cosmos_predict2.configs.base.defaults.ema import EMAConfig
 from cosmos_predict2.configs.action_conditional.defaults.conditioner import ActionConditionalConditioner
 from cosmos_predict2.models.text2image_dit import SACConfig
-from cosmos_predict2.models.video2world_dit_action import ActionConditionalMinimalV1LVGDiT
+from cosmos_predict2.models.action_video2world_dit import ActionConditionalMinimalV1LVGDiT
 from cosmos_predict2.tokenizers.tokenizer import TokenizerInterface
 from cosmos_predict2.configs.base.config_video2world import Video2WorldPipelineConfig
 from imaginaire.config import make_freezable

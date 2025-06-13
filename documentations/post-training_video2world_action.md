@@ -68,7 +68,7 @@ action_conditional_predict2_video2world_2b_training = dict(
 For example, if a posttrained checkpoint with 1000 iterations is to be used, run the following command.
 Use `--dit_path` argument to specify the path to the post-trained checkpoint.
 ```
-CUDA_HOME=$CONDA_PREFIX PYTHONPATH=$(pwd) python examples/video2world_action.py \
+CUDA_HOME=$CONDA_PREFIX PYTHONPATH=$(pwd) python examples/action_video2world.py \
   --model_size 2B \
   --dit_path "checkpoints/posttraining/video2world/action_conditional_predict2_video2world_2b_training_${now:%Y-%m-%d}_${now:%H-%M-%S}/checkpoints/model/iter_000001000.pt" \
   --input_video datasets/bridge/opensource_robotdata/bridge/videos/test/13/rgb.mp4 \

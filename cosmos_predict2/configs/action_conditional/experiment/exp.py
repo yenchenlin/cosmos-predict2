@@ -26,7 +26,6 @@ action_conditional_predict2_video2world_2b_training = dict(
         {"override /optimizer": "fusedadamw"},
         {"override /ckpt_type": "standard"},
         {"override /data_train": "bridge_train"},
-        # {"override /data_val": "bridge_val"},
         "_self_",
     ],
     model=dict(

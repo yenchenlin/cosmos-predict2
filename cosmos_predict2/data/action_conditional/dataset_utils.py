@@ -18,93 +18,12 @@ Adapted from:
 https://github.com/bytedance/IRASim/blob/main/dataset/dataset_util.py
 """
 
-import base64
 import math
 import os
-from io import BytesIO
 
 import numpy as np
 import torch
-import torch.distributed as dist
 import torchvision.transforms.functional as F
-from PIL import Image
-
-
-def is_dist_avail_and_initialized():
-    if not dist.is_available():
-        return False
-    if not dist.is_initialized():
-        return False
-    return True
-
-
-def get_rank():
-    if not is_dist_avail_and_initialized():
-        return 0
-    return dist.get_rank()
-
-
-def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
-    """
-    embed_dim: output dimension for each position
-    pos: a list of positions to be encoded: size (M,)
-    out: (M, D)
-    """
-    assert embed_dim % 2 == 0
-    omega = np.arange(embed_dim // 2, dtype=np.float32)
-    omega /= embed_dim / 2.0
-    omega = 1.0 / 10000**omega  # (D/2,)
-
-    pos = pos.reshape(-1)  # (M,)
-    out = np.einsum("m,d->md", pos, omega)  # (M, D/2), outer product
-
-    emb_sin = np.sin(out)  # (M, D/2)
-    emb_cos = np.cos(out)  # (M, D/2)
-
-    emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
-    return emb
-
-
-def get_2d_sincos_pos_embed_from_grid(embed_dim, grid):
-    assert embed_dim % 2 == 0
-
-    # use half of dimensions to encode grid_h
-    emb_h = get_1d_sincos_pos_embed_from_grid(embed_dim // 2, grid[0])  # (H*W, D/2)
-    emb_w = get_1d_sincos_pos_embed_from_grid(embed_dim // 2, grid[1])  # (H*W, D/2)
-
-    emb = np.concatenate([emb_h, emb_w], axis=1)  # (H*W, D)
-    return emb
-
-
-def get_2d_sincos_pos_embed(embed_dim, grid_size, cls_token=False):
-    """
-    grid_size: int of the grid height and width
-    return:
-    pos_embed: [grid_size*grid_size, embed_dim] or [1+grid_size*grid_size, embed_dim] (w/ or w/o cls_token)
-    """
-    grid_h = np.arange(grid_size, dtype=np.float32)
-    grid_w = np.arange(grid_size, dtype=np.float32)
-    grid = np.meshgrid(grid_w, grid_h)  # here w goes first
-    grid = np.stack(grid, axis=0)
-
-    grid = grid.reshape([2, 1, grid_size, grid_size])
-    pos_embed = get_2d_sincos_pos_embed_from_grid(embed_dim, grid)
-    if cls_token:
-        pos_embed = np.concatenate([np.zeros([1, embed_dim]), pos_embed], axis=0)
-    return pos_embed
-
-
-def b64_2_img(data: str):
-    image_b64 = base64.b64decode(data)
-    img = Image.open(BytesIO(image_b64)).convert("RGB")
-    return img
-
-
-def get_continuous_action(d_acts, c_act_max, c_act_min, n_bins):
-    c_act_max = c_act_max.to(d_acts.device)
-    c_act_min = c_act_min.to(d_acts.device)
-    c_acts = d_acts / (n_bins - 1) * (c_act_max - c_act_min) + c_act_min
-    return c_acts
 
 
 def alpha2rotm(a):
@@ -181,40 +100,6 @@ def rotm2euler(R):
         z += 2 * np.pi
     return np.array([x, y, z])
 
-
-def get_converted_fp32_paths(deepspeed_ckpt_path):
-    deepspeed_ckpt_path = deepspeed_ckpt_path.rstrip("/")
-    ckpt_dir = os.path.dirname(deepspeed_ckpt_path)
-    ckpt_name = os.path.basename(deepspeed_ckpt_path)
-    fp32_ckpt_name = f"{ckpt_name}.fp32.pt"
-    converted_path = os.path.join(ckpt_dir, fp32_ckpt_name)
-    return converted_path
-
-
-def quat2rotm(quat):
-    """Quaternion to rotation matrix.
-
-    Args:
-        quat (4, numpy array): quaternion x, y, z, w
-    Returns:
-        rotm (3x3 numpy array): rotation matrix
-    """
-    w = quat[3]
-    x = quat[0]
-    y = quat[1]
-    z = quat[2]
-
-    s = w * w + x * x + y * y + z * z
-
-    rotm = np.array(
-        [
-            [1 - 2 * (y * y + z * z) / s, 2 * (x * y - z * w) / s, 2 * (x * z + y * w) / s],
-            [2 * (x * y + z * w) / s, 1 - 2 * (x * x + z * z) / s, 2 * (y * z - x * w) / s],
-            [2 * (x * z - y * w) / s, 2 * (y * z + x * w) / s, 1 - 2 * (x * x + y * y) / s],
-        ]
-    )
-
-    return rotm
 
 
 class Resize_Preprocess:

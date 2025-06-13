@@ -18,7 +18,7 @@ import math
 import torch
 from megatron.core import parallel_state
 from torch.distributed.device_mesh import init_device_mesh
-from cosmos_predict2.pipelines.video2world_action import ActionConditionalVideo2WorldPipeline
+from cosmos_predict2.pipelines.action_video2world import ActionConditionalVideo2WorldPipeline
 from cosmos_predict2.models.video2world_model import Predict2Video2WorldModel, Predict2Video2WorldModelConfig
 from imaginaire.model import ImaginaireModel
 from imaginaire.utils import log
