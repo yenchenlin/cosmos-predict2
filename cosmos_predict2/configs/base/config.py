@@ -24,6 +24,8 @@ from cosmos_predict2.configs.base.defaults.ema import register_ema
 from cosmos_predict2.configs.base.defaults.model import register_model
 from cosmos_predict2.configs.base.defaults.optimizer import register_optimizer
 from cosmos_predict2.configs.base.defaults.scheduler import register_scheduler
+from cosmos_predict2.configs.action_conditional.defaults.data import register_training_and_val_data_action_conditional
+from cosmos_predict2.configs.action_conditional.defaults.model import register_model_action_conditional
 from imaginaire import config
 from imaginaire.trainer import ImaginaireTrainer as Trainer
 from imaginaire.utils.config_helper import import_all_modules_from_package
@@ -83,7 +85,12 @@ def make_config() -> Config:
     register_checkpoint()
     register_callbacks()
 
+    # action conditional post-training config
+    register_training_and_val_data_action_conditional()
+    register_model_action_conditional()
+
     # experiment config are defined in the experiment folder
     # call import_all_modules_from_package to register them
     import_all_modules_from_package("cosmos_predict2.configs.base.experiment", reload=True)
+    import_all_modules_from_package("cosmos_predict2.configs.action_conditional.experiment", reload=True)
     return c
