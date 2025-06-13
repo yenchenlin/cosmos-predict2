@@ -98,8 +98,13 @@ Please make sure you have access to Docker on your machine and the [NVIDIA Conta
 | Cosmos-Predict2-2B-Sample-Action-Conditioned | [🤗 Huggingface](https://huggingface.co/nvidia/Cosmos-Predict2-2B-Sample-Action-Conditioned) | `python -m scripts.download_checkpoints --model_types sample_action_conditioned` | Supports 480P and 4FPS. |
 
 For Video2World model with different resolution and FPS, you can pass `resolution` and `fps` flag to control which model checkpoint to download. For example, if you want a 2B model with 480P and 10FPS, you can do
-```
+```bash
 python -m scripts.download_checkpoints --model_types video2world --model_sizes 2B --resolution 480 --fps 10
+```
+
+Tips: `model_types`, `model_sizes`, `fps` and `resolution` supports multiple values. So if you want a mega command to download {2,14}B Video2World models with {10,16} FPS and {480,720}P, you can download 2x2x2=8 models via
+```bash
+python -m scripts.download_checkpoints --model_types video2world --model_sizes 2B,14B --reoslution 480,720 --fps 10,16
 ```
 
 You can pass `--checkpoint_dir <path to ckpt>` if you want to control where to put the checkpoints.

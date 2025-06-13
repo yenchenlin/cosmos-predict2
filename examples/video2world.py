@@ -164,7 +164,6 @@ def setup_pipeline(args: argparse.Namespace):
 
         config.resolution = args.resolution
         if args.fps == 10: # default is 16 so no need to change config
-            log.info(f"Using 10 fps for 14B model")
             config.state_t = 16
 
         dit_path = f"checkpoints/nvidia/Cosmos-Predict2-14B-Video2World/model-{args.resolution}p-{args.fps}fps.pt"
