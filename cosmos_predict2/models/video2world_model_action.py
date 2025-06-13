@@ -14,23 +14,29 @@
 # limitations under the License.
 
 import math
+from typing import Any, Dict, Mapping, Tuple
 
 import attrs
 import torch
+from einops import rearrange
 from megatron.core import parallel_state
 from torch.distributed.device_mesh import init_device_mesh
+from torch.distributed.tensor import DTensor
+from torch.nn.modules.module import _IncompatibleKeys
 
+from cosmos_predict2.conditioner import DataType, T2VCondition
 from cosmos_predict2.configs.action_conditional.config_action_conditional import (
     ACTION_CONDITIONAL_PREDICT2_VIDEO2WORLD_PIPELINE_2B,
     ActionConditionalVideo2WorldPipelineConfig,
 )
+from cosmos_predict2.networks.model_weights_stats import WeightTrainingStat
 from cosmos_predict2.pipelines.video2world_action import ActionConditionalVideo2WorldPipeline
 from cosmos_predict2.utils.checkpointer import non_strict_load_model
 from cosmos_predict2.utils.optim_instantiate import get_base_scheduler
 from cosmos_predict2.models.video2world_model import Predict2Video2WorldModel
 from imaginaire.lazy_config import LazyDict, instantiate
-from imaginaire.utils import log
 from imaginaire.model import ImaginaireModel
+from imaginaire.utils import log
 
 
 @attrs.define(slots=False)
@@ -46,6 +52,10 @@ class Predict2ModelManagerConfig:
 class Predict2Video2WorldModelConfig:
     learning_rate: float = 2 ** (-14.5)
     train_architecture: str = "base"
+    lora_rank: int = 16
+    lora_alpha: int = 16
+    lora_target_modules: str = "q_proj,k_proj,v_proj,output_proj,mlp.layer1,mlp.layer2"
+    init_lora_weights: bool = True
     use_gradient_checkpointing: bool = True
     use_gradient_checkpointing_offload: bool = False
     use_selective_activation_checkpointing: bool = False
@@ -115,6 +125,7 @@ class ActionConditionalPredict2Video2WorldModel(Predict2Video2WorldModel):
             dit_path=config.model_manager_config.dit_path,
         )
 
+
         self.freeze_parameters()
         if config.train_architecture == "lora":
             self.add_lora_to_model(
@@ -160,4 +171,3 @@ class ActionConditionalPredict2Video2WorldModel(Predict2Video2WorldModel):
         self.learning_rate = learning_rate
         self.use_gradient_checkpointing = use_gradient_checkpointing
         self.use_gradient_checkpointing_offload = use_gradient_checkpointing_offload
-

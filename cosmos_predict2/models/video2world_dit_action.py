@@ -45,7 +45,9 @@ class Mlp(nn.Module):
 class ActionConditionalMinimalV1LVGDiT(MinimalV1LVGDiT):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.create_action_embedder()
 
+    def create_action_embedder(self):
         self.action_embedder_B_D = Mlp(
             in_features=7*12,
             hidden_features=self.model_channels * 4,

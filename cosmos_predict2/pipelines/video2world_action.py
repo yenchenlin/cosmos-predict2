@@ -28,9 +28,13 @@ from torch.distributed.fsdp import fully_shard
 
 from cosmos_predict2.auxiliary.cosmos_reason1 import CosmosReason1
 from cosmos_predict2.auxiliary.text_encoder import CosmosT5TextEncoder
-from cosmos_predict2.conditioner import DataType
+from cosmos_predict2.conditioner import DataType, T2VCondition
 from cosmos_predict2.pipelines.video2world import Video2WorldPipeline
 from cosmos_predict2.configs.action_conditional.defaults.conditioner import ActionConditionalConditioner
+from cosmos_predict2.configs.base.config_video2world import (
+    ConditioningStrategy,
+    Video2WorldPipelineConfig,
+)
 from cosmos_predict2.configs.action_conditional.config_action_conditional import (
     ActionConditionalVideo2WorldPipelineConfig,
 )

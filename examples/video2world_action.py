@@ -38,7 +38,8 @@ _DEFAULT_NEGATIVE_PROMPT = "The video captures a series of frames showing ugly s
 '''
 python -m examples.video2world_action \
   --model_size 2B \
-  --batch_input_json dream_gen_benchmark/gr1_object/batch_input.json
+  --batch_input_json dream_gen_benchmark/gr1_object/batch_input.json \
+  --input_video assets/video2world/input0.jpg \
 '''
 
 def validate_input_file(input_path: str, num_conditional_frames: int) -> bool:
@@ -102,13 +103,13 @@ def parse_args() -> argparse.Namespace:
         help="Text prompt for video generation",
     )
     parser.add_argument(
-        "--input_base_folder",
+        "--input_video",
         type=str,
         default="assets/video2world/input0.jpg",
         help="Path to input image or video for conditioning (include file extension)",
     )
     parser.add_argument(
-        "--input_annotation_folder",
+        "--input_annotation",
         type=str,
         default="assets/video2world/input0.jpg",
         help="Path to input image or video for conditioning (include file extension)",

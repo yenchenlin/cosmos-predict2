@@ -49,42 +49,11 @@ action_conditional_predict2_video2world_2b_training = dict(
 )
 
 
-"""
-torchrun --nproc_per_node=2 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/base/config.py -- experiment="action_conditional_predict2_video2world_14b_training" ~dataloader_train.dataloaders
-"""
-action_conditional_predict2_video2world_14b_training = dict(
-    defaults=[
-        {"override /model": "action_conditional_predict2_v2w_14b_fsdp"},
-        {"override /optimizer": "fusedadamw"},
-        {"override /ckpt_type": "standard"},
-        {"override /data_train": "bridge_train"},
-        {"override /data_val": "bridge_val"},
-        "_self_",
-    ],
-    model=dict(
-        config=dict(
-            num_video_frames=13,
-            resolution="720",
-            fsdp_shard_size=8,
-        )
-    ),
-    job=dict(
-        group="debug", name="action_conditional_predict2_video2world_14b_training_${now:%Y-%m-%d}_${now:%H-%M-%S}"
-    ),
-    dataloader_train=dict(
-        batch_size=2,
-    ),
-    trainer=dict(
-        distributed_parallelism="fsdp",
-    ),
-)
 
 
 for _item in [
     # predict2_video2world_2b
     action_conditional_predict2_video2world_2b_training,
-    # predict2_video2world_14b
-    action_conditional_predict2_video2world_14b_training,
 ]:
     # Get the experiment name from the global variable, e.g. exp01_wan_lora -> experiment_name = "exp01_wan_lora"
     experiment_name = [name.lower() for name, value in globals().items() if value is _item][0]
