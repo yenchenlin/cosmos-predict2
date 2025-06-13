@@ -71,7 +71,7 @@ See the config `predict2_video2world_training_2b_cosmos_nemo_assets` defined in 
 # Cosmos-NeMo-Assets example
 example_video_dataset_cosmos_nemo_assets = L(Dataset)(
     dataset_dir="datasets/benchmark_train/cosmos_nemo_assets",
-    num_frames=77,
+    num_frames=93,
     video_size=(720, 1280),
 )
 

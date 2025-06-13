@@ -151,7 +151,7 @@ class Dataset(Dataset):
 if __name__ == "__main__":
     dataset = Dataset(
         dataset_dir="datasets/benchmark_train/gr1",
-        num_frames=77,
+        num_frames=93,
         video_size=[480, 832],
     )
 
