@@ -56,12 +56,6 @@ class Predict2Video2WorldModelConfig:
     lora_alpha: int = 16
     lora_target_modules: str = "q_proj,k_proj,v_proj,output_proj,mlp.layer1,mlp.layer2"
     init_lora_weights: bool = True
-    use_gradient_checkpointing: bool = True
-    use_gradient_checkpointing_offload: bool = False
-    use_selective_activation_checkpointing: bool = False
-    compute_latents_online: bool = False
-    num_video_frames: int = 81
-    resolution: str = "720"
 
     precision: str = "bfloat16"
     input_data_key: str = "video"
@@ -87,8 +81,6 @@ class Predict2Video2WorldModel(ImaginaireModel):
         super().__init__()
         # New code, added for i4 adaption
         learning_rate = config.learning_rate
-        use_gradient_checkpointing = config.use_gradient_checkpointing
-        use_gradient_checkpointing_offload = config.use_gradient_checkpointing_offload
 
         self.config = config
 
@@ -168,8 +160,6 @@ class Predict2Video2WorldModel(ImaginaireModel):
             log.info("FSDP (Fully Sharded Data Parallel) is disabled.")
 
         self.learning_rate = learning_rate
-        self.use_gradient_checkpointing = use_gradient_checkpointing
-        self.use_gradient_checkpointing_offload = use_gradient_checkpointing_offload
 
     # New function, added for i4 adaption
     @property
