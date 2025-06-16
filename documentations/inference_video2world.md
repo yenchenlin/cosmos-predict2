@@ -249,6 +249,33 @@ python -m examples.video2world_bestofn \
     --save_path output/my_existing_videos
 ```
 
+### Long Video Generation
+
+In a single forward pass of the Video2World model, we only generate one chunk of video. To generate longer videos of multiple chunks, we support long video generation in an auto-regressive inference manner. The idea is to generate the first chunk, then iteratively taking the last `num_conditional_frames` frames of the previous chunk as input condition of next chunk.
+
+Since long video generation calls the whole denoising process of Video2World model for `num_chunks` times, it's much slower than single-chunk video generation. We hence highly recommend using multi-GPU inference to boost the speed.
+
+```bash
+# Set the input prompt
+PROMPT="The video opens with a view inside a well-lit warehouse or retail store aisle, characterized by high ceilings and industrial shelving units stocked with various products. The shelves are neatly organized with items such as canned goods, packaged foods, and cleaning supplies, all displayed in bright packaging that catches the eye. The surrounding environment includes additional shelving units filled with similar products. The scene concludes with the forklift still in motion, ensuring the pallet is securely placed on the shelf."
+
+# Set the number of GPUs to use
+export NUM_GPUS=8
+
+# Run video2world long video generation of 6 chunks
+PYTHONPATH=. torchrun --nproc_per_node=${NUM_GPUS} examples/video2world_lvg.py \
+    --model_size 14B \
+    --num_chunks 6 \
+    --input_path assets/video2world_lvg/example_input.jpg \
+    --prompt "${PROMPT}" \
+    --save_path output/video2world_2b_lvg_example1.mp4 \
+    --num_gpus ${NUM_GPUS} \
+    --disable_guardrail \
+    --disable_prompt_refiner
+```
+
+Example output is included at `assets/video2world_lvg/example_output.mp4`.
+
 ## API Documentation
 
 The `video2world.py` script supports the following command-line arguments:
