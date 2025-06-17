@@ -229,8 +229,9 @@ python -m examples.video2world_bestofn \
     --model_size 2B \
     --input_path assets/video2world/input0.jpg \
     --prompt "${PROMPT}" \
-    --num_generations 5 \
-    --num_critic_trials 3 \
+    --num_generations 4 \
+    --num_critic_trials 5 \
+    --disable_guardrail \
     --save_path output/rejection_sampling_demo
 ```
 
@@ -325,8 +326,8 @@ In addition to the main `video2world.py` script, there are specialized variants 
 
 The `video2world_bestofn.py` script extends the standard Video2World capabilities with rejection sampling to improve video quality. It supports all the standard Video2World parameters plus:
 
-- `--num_generations`: Number of different videos to generate from the same input (default: 5)
-- `--num_critic_trials`: Number of times to evaluate each video with the critic model (default: 3)
+- `--num_generations`: Number of different videos to generate from the same input (default: 2)
+- `--num_critic_trials`: Number of times to evaluate each video with the critic model (default: 5)
 - `--skip_generation`: Flag to run critic only on existing videos without generation
 - `--save_path`: Directory to save the generated videos and HTML reports (default: "output/best-of-n")
 
