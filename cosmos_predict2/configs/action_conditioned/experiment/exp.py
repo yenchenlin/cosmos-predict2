@@ -25,7 +25,7 @@ action_conditioned_predict2_video2world_2b_training = dict(
         {"override /model": "action_conditioned_predict2_v2w_2b_fsdp"},
         {"override /optimizer": "fusedadamw"},
         {"override /ckpt_type": "standard"},
-        {"override /data_train": "bridge_train"},
+        {"override /dataloader_train": "bridge_train"},
         "_self_",
     ],
     model=dict(

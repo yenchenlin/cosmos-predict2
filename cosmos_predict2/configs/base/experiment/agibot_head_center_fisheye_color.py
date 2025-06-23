@@ -71,7 +71,7 @@ predict2_video2world_training_2b_agibot_head_center_fisheye_color = dict(
         {"override /optimizer": "fusedadamw"},
         {"override /scheduler": "lambdalinear"},
         {"override /ckpt_type": "standard"},
-        {"override /data_val": "mock"},
+        {"override /dataloader_val": "mock"},
         "_self_",
     ],
     job=dict(
@@ -127,7 +127,7 @@ predict2_video2world_training_14b_agibot_head_center_fisheye_color = dict(
         {"override /optimizer": "fusedadamw"},
         {"override /scheduler": "lambdalinear"},
         {"override /ckpt_type": "standard"},
-        {"override /data_val": "mock"},
+        {"override /dataloader_val": "mock"},
         "_self_",
     ],
     job=dict(
