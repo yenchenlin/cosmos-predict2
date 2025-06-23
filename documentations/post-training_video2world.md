@@ -89,7 +89,7 @@ predict2_video2world_training_2b_custom_data = dict(
         {"override /optimizer": "fusedadamw"},
         {"override /scheduler": "lambdalinear"},
         {"override /ckpt_type": "standard"},
-        {"override /data_val": "mock"},
+        {"override /dataloader_val": "mock"},
         "_self_",
     ],
     job=dict(
@@ -156,7 +156,7 @@ In the above config example, it starts by overriding from the registered configs
     {"override /optimizer": "fusedadamw"},
     {"override /scheduler": "lambdalinear"},
     {"override /ckpt_type": "standard"},
-    {"override /data_val": "mock"},
+    {"override /dataloader_val": "mock"},
 ```
 
 The configuration system is organized as follows:

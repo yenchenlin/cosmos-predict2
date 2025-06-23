@@ -65,7 +65,7 @@ MOCK_DATA_VIDEO_ONLY_CONFIG = _VIDEO_LOADER
 
 def register_training_and_val_data():
     cs = ConfigStore()
-    cs.store(group="data_train", package="dataloader_train", name="mock", node=MOCK_DATA_INTERLEAVE_CONFIG)
-    cs.store(group="data_train", package="dataloader_train", name="mock_image", node=MOCK_DATA_IMAGE_ONLY_CONFIG)
-    cs.store(group="data_train", package="dataloader_train", name="mock_video", node=MOCK_DATA_VIDEO_ONLY_CONFIG)
-    cs.store(group="data_val", package="dataloader_val", name="mock", node=MOCK_DATA_INTERLEAVE_CONFIG)
+    cs.store(group="dataloader_train", package="dataloader_train", name="mock", node=MOCK_DATA_INTERLEAVE_CONFIG)
+    cs.store(group="dataloader_train", package="dataloader_train", name="mock_image", node=MOCK_DATA_IMAGE_ONLY_CONFIG)
+    cs.store(group="dataloader_train", package="dataloader_train", name="mock_video", node=MOCK_DATA_VIDEO_ONLY_CONFIG)
+    cs.store(group="dataloader_val", package="dataloader_val", name="mock", node=MOCK_DATA_INTERLEAVE_CONFIG)
