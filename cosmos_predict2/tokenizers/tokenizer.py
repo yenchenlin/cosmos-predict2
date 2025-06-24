@@ -501,6 +501,8 @@ class VAE_(nn.Module):
         else:
             mu = (mu - scale[0]) * scale[1]
         self.clear_cache()
+        print(f"VAE_ rank: {torch.distributed.get_rank()}, mu: {mu.sum()}")
+        # exit()
         return mu
 
     def decode(self, z, scale):
@@ -723,6 +725,7 @@ class VAE:
                 model_time = time.perf_counter()
             
             latent = self.model.encode(videos, self.scale)
+            print(f"VAE rank: {torch.distributed.get_rank()}, latent: {latent.sum()}")
             if self.benchmark:
                 torch.cuda.synchronize()
                 benchmark_times.model_invocation = time.perf_counter() - model_time
@@ -790,9 +793,12 @@ class TokenizerInterface(VideoTokenizerInterface):
         if num_frames == 1:
             return (latents - self.model.img_mean.type_as(latents)) / self.model.img_std.type_as(latents)
         else:
-            return (latents - self.model.video_mean[:, :, :num_frames].type_as(latents)) / self.model.video_std[
+            result = (latents - self.model.video_mean[:, :, :num_frames].type_as(latents)) / self.model.video_std[
                 :, :, :num_frames
             ].type_as(latents)
+
+            print(f"TokenizerInterface rank: {torch.distributed.get_rank()}, result: {result.sum()}")
+            return result
 
     def decode(self, latent: torch.Tensor) -> torch.Tensor:
         num_frames = latent.shape[2]

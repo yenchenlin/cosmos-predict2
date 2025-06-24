@@ -565,7 +565,21 @@ class Video2WorldPipeline(BasePipeline):
 
         # Latent state
         raw_state = data_batch[self.input_image_key if is_image_batch else self.input_data_key]
-        latent_state = self.encode(raw_state).contiguous().float()
+        latent_state = self.encode(raw_state)
+        latent_state_contiguous = latent_state.contiguous()
+        latent_state_float = latent_state_contiguous.float()
+        print(
+            f"rank: {torch.distributed.get_rank()}, "
+            f"raw_state: {raw_state.sum()}, "
+            f"latent_state: {latent_state.sum()}, "
+            f"latent_state_contiguous: {latent_state_contiguous.sum()}, "
+            f"latent_state_float: {latent_state_float.sum()}"
+        )
+        print(
+            f"rank: {torch.distributed.get_rank()}, "
+            f"latent_state_contiguous: {latent_state_contiguous[0, 0, 0, 0, :10]}, "
+        )
+        exit()
 
         # Condition
         condition = self.conditioner(data_batch)
