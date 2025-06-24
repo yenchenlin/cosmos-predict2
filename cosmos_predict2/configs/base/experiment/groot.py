@@ -101,6 +101,43 @@ predict2_video2world_training_2b_groot_gr1_480 = dict(
     ),
 )
 
+predict2_video2world_training_2b_groot_gr1_480_mock_data = dict(
+    defaults=[
+        "/experiment/predict2_video2world_training_2b_groot_gr1_480",  # inherit the config
+        {"override /dataloader_train": "mock"},  # override the dataloader_train
+        "_self_",
+    ],
+    trainer=dict(
+        max_iter=5,
+    ),
+    dataloader_train=dict(
+        dataloaders=dict(
+            video_data=dict(
+                dataloader=dict(
+                    dataset=dict(
+                        resolution="480",
+                        num_video_frames=5
+                    )
+                )
+            ),
+            image_data=dict(
+                ratio=0
+            )
+        )
+    ),
+    model=dict(
+        config=dict(
+            pipe_config=dict(
+                conditioner=dict(
+                    text=dict(
+                        dropout_rate=0.0,
+                    ),
+                )
+            ),
+        ),
+    )
+)
+
 # torchrun --nproc_per_node=8 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/base/config.py -- experiment=predict2_video2world_training_14b_groot_gr1_480
 predict2_video2world_training_14b_groot_gr1_480 = dict(
     defaults=[
@@ -152,6 +189,8 @@ for _item in [
     predict2_video2world_training_2b_groot_gr1_480,
     # 14b, gr1
     predict2_video2world_training_14b_groot_gr1_480,
+    # 2b, gr1, mock data
+    predict2_video2world_training_2b_groot_gr1_480_mock_data,
 ]:
     # Get the experiment name from the global variable, e.g. exp01_wan_lora -> experiment_name = "exp01_wan_lora"
     experiment_name = [name.lower() for name, value in globals().items() if value is _item][0]
