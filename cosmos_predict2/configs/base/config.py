@@ -38,8 +38,8 @@ class Config(config.Config):
     defaults: List[Any] = attrs.field(
         factory=lambda: [
             "_self_",
-            {"data_train": None},
-            {"data_val": None},
+            {"dataloader_train": None},
+            {"dataloader_val": None},
             {"optimizer": "fusedadamw"},
             {"scheduler": "constant"},
             {"model": "predict2_video2world_fsdp_2b"},
