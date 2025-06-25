@@ -101,14 +101,6 @@ predict2_video2world_training_2b_groot_gr1_480 = dict(
     ),
 )
 
-# predict2_video2world_training_2b_groot_gr1_480_mock = dict(
-#     defaults=[
-#         {"/experiment/predict2_video2world_training_2b_groot_gr1_480"},
-#         "_self_",
-#     ],
-
-# )
-
 # torchrun --nproc_per_node=8 --master_port=12341 -m scripts.train --config=cosmos_predict2/configs/base/config.py -- experiment=predict2_video2world_training_14b_groot_gr1_480
 predict2_video2world_training_14b_groot_gr1_480 = dict(
     defaults=[
